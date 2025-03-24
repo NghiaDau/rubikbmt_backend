@@ -21,4 +21,17 @@ router.get("/getCubeSubjects", async function (req, res) {
         cubeSubjects: result,
     });
 });
+router.get("/getCubeSubjectNameById", async function (req, res) {
+    var cubeSubjectService = new CubeSubjectService();
+    var result = await cubeSubjectService.getCubeSubjectNameById(req.query.id);
+    if (!result) {
+        return res.status(404).json({
+            message: "CubeSubject not found",
+        });
+    }
+    res.json({
+        message: "CubeSubject fetched successfully",
+        cubeSubject: result,
+    });
+});
 module.exports = router;

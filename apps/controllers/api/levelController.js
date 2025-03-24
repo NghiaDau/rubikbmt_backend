@@ -21,4 +21,18 @@ router.get("/getLevels", async function (req, res) {
         levels: result,
     });
 });
+router.get("/getLevelNameById", async function (req, res) {
+    var levelService = new LevelService();
+    var result = await levelService.getLevelNameById(req.query.id);
+    if(!result) {
+        return res.status(404).json({
+            message: "Level not found",
+        });
+    }
+    res.json({
+        message: "Level fetched successfully",
+        level: result,
+    });
+});
+
 module.exports = router;

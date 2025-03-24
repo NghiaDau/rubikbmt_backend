@@ -4,7 +4,9 @@ var Course = require("./../../entities/course");
 var CourseService = require("./../../services/courseService");
 var LevelService = require("./../../services/levelService");
 var CubeSubjectService = require("./../../services/cubeSubjectService");
-router.post("/addCourse", async function (req, res) {
+var validateCourse = require("./../../utils/validateCourse"); 
+var validateObjectId = require("./../../utils/validateObjectId"); 
+router.post("/addCourse", validateCourse,async function (req, res) {
     var { name, description, requirement, target, min_age, max_age, minutesPerSesion, NumOfSession, fee, idCubeSubject, idLevel } = req.body;
     var course = new Course();
     course.name = name;
@@ -33,16 +35,22 @@ router.get("/getCourses", async function (req, res) {
         courses: result,
     });
 });
-router.get("/getCourseById", async function (req, res) {
-    console.log(req.query.id);
+router.get("/getCourseById", validateObjectId, async function (req, res) {
     var courseService = new CourseService();
     var result = await courseService.getCourseById(req.query.id);
-    var levelService = new LevelService();
-    var level = await levelService.getLevelById(result.idLevel);
-    var cubeSubjectService = new CubeSubjectService();
-    var cubeSubject = await cubeSubjectService.getCubeSubjectById(result.idCubeSubject);
-    result.level_name = level.name;
-    result.cubeSubject_name = cubeSubject.name;
+    if(!result) {
+        return res.status(404).json({
+            message: "Course not found",
+        });
+    }
+    // var levelService = new LevelService();
+    // var cubeSubjectService = new CubeSubjectService();
+    // const [level, cubeSubject] = await Promise.all([
+    //     levelService.getLevelById(result.idLevel),
+    //     cubeSubjectService.getCubeSubjectById(result.idCubeSubject),
+    // ]);
+    // result.level_name = level.name;
+    // result.cubeSubject_name = cubeSubject.name;
     res.json({
         message: "Course fetched successfully",
         course: result,

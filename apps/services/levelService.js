@@ -27,5 +27,8 @@ class LevelService {
     async deleteLevel(id) {
         return await this.levelCollection.deleteOne({ _id: ObjectId(id) });
     }
+    async getLevelNameById(id) {
+        return await this.levelCollection.findOne({ _id: new ObjectId(id) }, { name: 1 });
+    }
 }
 module.exports = LevelService;

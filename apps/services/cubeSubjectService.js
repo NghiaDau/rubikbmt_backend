@@ -27,5 +27,8 @@ class CubeSubjectService {
     async deleteCubeSubject(id) {
         return await this.cubeSubjectCollection.deleteOne({ _id: ObjectId(id) });
     }
+    async getCubeSubjectNameById(id) {
+        return await this.cubeSubjectCollection.findOne({ _id: new ObjectId(id) }).select(" name" );
+    }
 }
 module.exports = CubeSubjectService;
