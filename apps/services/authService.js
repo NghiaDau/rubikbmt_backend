@@ -42,10 +42,26 @@ class AuthService {
     );
   }
 
+  async getAllUsers(page = 1, limit = 10) {
+    const skip = (page - 1) * limit;
+    return await this.userCollection
+      .find({}, { projection: { password: 0 } })
+      .skip(skip)
+      .limit(limit)
+      .toArray();
+  }
+
   async getUserByEmail(email) {
     return await this.userCollection.findOne({
       email: email,
     });
+  }
+
+  async getUserByEmailIngnorePassword(email) {
+    return await this.userCollection.findOne(
+      { email: email },
+      { projection: { password: 0 } } // Loại bỏ trường password
+    );
   }
 
   async deleteUser(userId) {
