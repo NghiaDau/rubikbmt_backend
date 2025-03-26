@@ -9,8 +9,9 @@ class Course {
     minutesPerSession;
     numOfSessions;
     fee;
-    idCubeSubject;
-    idLevel;
+    cubeSubject;
+    level;
+    courseDetail=[];
     constructor() {}
   }
   module.exports = Course;

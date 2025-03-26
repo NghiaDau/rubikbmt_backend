@@ -7,4 +7,6 @@ router.use("/api/v1/auth", require("./api/authController"));
 router.use("/api/v1/course", require("./api/courseController"));
 router.use("/api/v1/cubeSubject", require("./api/cubeSubjectController"));
 router.use("/api/v1/level", require("./api/levelController"));
+router.use("/api/v1/cubeSkill", require("./api/cubeSkillController"));
+router.use("/api/v1/courseDetail", require("./api/courseDetailController"));
 module.exports = router;

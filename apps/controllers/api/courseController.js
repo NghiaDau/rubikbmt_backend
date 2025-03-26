@@ -1,6 +1,7 @@
 var express = require("express");
 var router = express.Router();
 var Course = require("./../../entities/course");
+var CubeSubject = require("./../../entities/cubesubject");
 var CourseService = require("./../../services/courseService");
 var LevelService = require("./../../services/levelService");
 var CubeSubjectService = require("./../../services/cubeSubjectService");
@@ -18,8 +19,8 @@ router.post("/addCourse", validateCourse,async function (req, res) {
     course.minutesPerSession = minutesPerSesion;
     course.numOfSessions = NumOfSession;
     course.fee = fee;
-    course.idCubeSubject = idCubeSubject;
-    course.idLevel = idLevel;
+    course.cubeSubject = idCubeSubject;
+    course.level = idLevel;
     var courseService = new CourseService();
     var result = await courseService.addCourse(course);
     res.json({
@@ -43,14 +44,6 @@ router.get("/getCourseById", validateObjectId, async function (req, res) {
             message: "Course not found",
         });
     }
-    // var levelService = new LevelService();
-    // var cubeSubjectService = new CubeSubjectService();
-    // const [level, cubeSubject] = await Promise.all([
-    //     levelService.getLevelById(result.idLevel),
-    //     cubeSubjectService.getCubeSubjectById(result.idCubeSubject),
-    // ]);
-    // result.level_name = level.name;
-    // result.cubeSubject_name = cubeSubject.name;
     res.json({
         message: "Course fetched successfully",
         course: result,
