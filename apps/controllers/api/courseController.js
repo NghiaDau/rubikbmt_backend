@@ -8,6 +8,20 @@ var CubeSubjectService = require("./../../services/cubeSubjectService");
 var validateCourse = require("./../../utils/validateCourse"); 
 var validateObjectId = require("./../../utils/validateObjectId"); 
 router.post("/addCourse", validateCourse,async function (req, res) {
+    // Example of a valid request body:
+    // {
+    //     "name":"Khóa học rubik cơ bản", 
+    //     "description":"description", 
+    //     "requirement":"requirement", 
+    //     "target":"target", 
+    //     "min_age":8, 
+    //     "max_age":18, 
+    //     "minutesPerSesion":45, 
+    //     "NumOfSession":3, 
+    //     "fee":700000, 
+    //     "idCubeSubject":"67e0031993b85f2b72d75cfd", 
+    //     "idLevel":"67e0025e9a240273e2edf810"  
+    //   }
     var { name, description, requirement, target, min_age, max_age, minutesPerSesion, NumOfSession, fee, idCubeSubject, idLevel } = req.body;
     var course = new Course();
     course.name = name;

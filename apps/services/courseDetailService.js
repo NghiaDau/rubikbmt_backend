@@ -52,6 +52,11 @@ class CourseDetailService {
                 { $set: { session: listSessionIds } }
             );
 
+            // Thêm CourseDetail vào danh sách courseDetail của Course
+            await this.courseCollection.updateOne(
+                { _id: new ObjectId(courseDetail.course) },
+                { $addToSet: { courseDetail: courseDetailId } }); 
+                
             return result;
         } catch (error) {
             console.error("Lỗi khi thêm CourseDetail:", error);
