@@ -8,6 +8,7 @@ var UserRoleService = require("./../../services/userRoleService");
 var ClaimService = require("./../../services/claimService");
 var transpost = require("../../utils/sendMail");
 var { ObjectId } = require("mongodb");
+const { GridFSBucket } = require("mongodb");
 var {
   doHashPassword,
   doHashValidPassWord,
@@ -18,6 +19,10 @@ const Role = require("../../entities/role");
 const jwtExpirySeconds = 600;
 var config = require("./../../../config/setting.json");
 var verifyToken = require("./../../utils/verifyToken");
+const { json } = require("body-parser");
+var multer = require("multer");
+var storage = multer.memoryStorage();
+var upload = multer({ storage: storage });
 
 router.post("/login", async function (req, res) {
   try {
@@ -62,11 +67,16 @@ router.post("/login", async function (req, res) {
       config.jwt.secret,
       { expiresIn: jwtExpirySeconds }
     );
+    res.cookie("token", token, {
+      maxAge: jwtExpirySeconds * 1000,
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+    });
 
     return res.status(200).json({
       status: true,
       message: "Login successful",
-      token: token,
     });
   } catch (error) {
     console.log(error);
@@ -74,7 +84,7 @@ router.post("/login", async function (req, res) {
 });
 
 router.post("/register", async function (req, res) {
-  var { phone, email } = req.body;
+  var { firstName, lastName, phone, email } = req.body;
   var authService = new AuthService();
   var existingUser = await authService.getUserByEmail(email);
   if (existingUser) {
@@ -84,6 +94,8 @@ router.post("/register", async function (req, res) {
   }
 
   var user = new User();
+  user.firstName = firstName;
+  user.lastName = lastName;
   user.email = email;
   user.phone = phone;
 
@@ -114,6 +126,12 @@ router.post("/register", async function (req, res) {
 
 router.post("/change-password", verifyToken, async (req, res) => {
   try {
+    var permision = req.userData.claims.includes("user.change-password");
+    if (!permision) {
+      return res
+        .status(403)
+        .json({ status: false, message: "You do not have permision." });
+    }
     var email = req.userData.user;
     var { oldPassword, newPassword } = req.body;
     var authService = new AuthService();
@@ -175,27 +193,168 @@ router.post("/forgot-password", async (req, res) => {
   }
 });
 
-router.post("/update-profile", verifyToken, (req, res) => {
+router.post("/logout", verifyToken, async (req, res) => {
   try {
-    console.log(req.userData);
-    var permision = req.userData.claims.includes("user.update-profile");
-    if (!permision) {
-      res
-        .status(403)
-        .json({ status: false, message: "You do not have permision." });
-    }
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+    });
+    return res.status(200).json({
+      status: true,
+      message: "Logout successful",
+    });
   } catch (error) {
     console.log(error);
   }
 });
-router.delete("/test-security", verifyToken, (req, res) => {
-  console.log(req.userData);
-  var permision = req.userData.claims.includes("user.test1");
-  if (!permision) {
+
+router.get("/get-user", verifyToken, async (req, res) => {
+  try {
+    var email = req.userData.user;
+    var authService = new AuthService();
+    var existingUser = await authService.getUserByEmailIngnorePassword(email);
+    if (!existingUser) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Email does not exist" });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "ok",
+      data: existingUser,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+router.get("/list-user", verifyToken, async (req, res) => {
+  try {
+    var permision = req.userData.claims.includes("user.list-user");
+    if (!permision) {
+      return res
+        .status(403)
+        .json({ status: false, message: "You do not have permision." });
+    }
+    if (!permision) {
+      return res
+        .status(403)
+        .json({ status: false, message: "You do not have permision." });
+    }
+    var { page, limit } = req.query;
+    page = parseInt(page);
+    limit = parseInt(limit);
+    var authService = new AuthService();
+    var userList = await authService.getUserList(page, limit);
+    return res.status(200).json({
+      status: true,
+      message: "ok",
+      data: userList,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+router.post(
+  "/update-profile",
+  upload.single("avatar"),
+  verifyToken,
+  async (req, res) => {
+    try {
+      var permision = req.userData.claims.includes(
+        config.claims.user.update_profile
+      );
+      if (!permision) {
+        return res
+          .status(403)
+          .json({ status: false, message: "You do not have permision." });
+      }
+      var email = req.userData.user;
+      var authService = new AuthService();
+      var existingUser = await authService.getUserByEmail(email);
+      if (!existingUser) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Email does not exist" });
+      }
+      var {
+        firstName,
+        lastName,
+        phone,
+        dateOfBirth,
+        desscription,
+        parentName,
+      } = req.body;
+      existingUser.phone = phone;
+      existingUser.firstName = firstName;
+      existingUser.lastName = lastName;
+      existingUser.dateOfBirth = dateOfBirth;
+      existingUser.desscription = desscription;
+      existingUser.parentName = parentName;
+      console.log(req.file);
+      if (req.file) {
+        console.log("ok");
+        var bucket = new GridFSBucket(authService.client.db(), {
+          bucketName: "avatar",
+        });
+        var uploadStream = bucket.openUploadStream(req.file.originalname);
+        uploadStream.end(req.file.buffer);
+        existingUser.avatar = uploadStream.id;
+        //console.log(pro.Image);
+      }
+
+      var result = await authService.updateUser(existingUser);
+      return res.status(200).json({
+        status: true,
+        message: "ok",
+        data: existingUser,
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  }
+);
+router.get("/get-image/:id", async function (req, res) {
+  try {
+    var autheService = new AuthService();
+    var bucket = new GridFSBucket(autheService.client.db(), {
+      bucketName: "avatar",
+    });
+
+    var fileId = new ObjectId(req.params.id);
+    var downloadStream = bucket.openDownloadStream(fileId);
+
+    downloadStream.on("data", (chunk) => {
+      res.write(chunk);
+    });
+
+    downloadStream.on("error", (err) => {
+      res.status(404).send({ message: "Image not found" });
+    });
+
+    downloadStream.on("end", () => {
+      res.end();
+    });
+  } catch (error) {
+    console.error("Error retrieving image:", error);
     res
+      .status(500)
+      .send({ message: "An error occurred while retrieving the image" });
+  }
+});
+router.post("/test-security", verifyToken, (req, res) => {
+  var permision = req.userData.claims.includes(
+    config.claims.user.test_security
+  );
+  if (!permision) {
+    return res
       .status(403)
       .json({ status: false, message: "You do not have permision." });
   }
-  res.json({ message: "OK ban oi" });
+  return res.json({ message: "OK ban oi" });
 });
+
 module.exports = router;

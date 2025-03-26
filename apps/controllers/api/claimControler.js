@@ -3,7 +3,8 @@ var router = express.Router();
 var Claim = require("./../../entities/claim");
 var ClaimService = require("./../../services/claimService");
 var { ObjectId } = require("mongodb");
-// 
+
+
 router.post("/add", async function (req, res) {
   try {
     var { roleId, claimName } = req.body;
