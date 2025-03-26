@@ -15,11 +15,9 @@ var {
   generatePassword,
 } = require("../../utils/hashing");
 var jsonwebtoken = require("jsonwebtoken");
-const Role = require("../../entities/role");
 const jwtExpirySeconds = 600;
 var config = require("./../../../config/setting.json");
 var verifyToken = require("./../../utils/verifyToken");
-const { json } = require("body-parser");
 var multer = require("multer");
 var storage = multer.memoryStorage();
 var upload = multer({ storage: storage });
