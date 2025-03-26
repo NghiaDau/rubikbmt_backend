@@ -168,6 +168,18 @@ router.post("/forgot-password", async (req, res) => {
     console.log(error);
   }
 });
+
+router.post("/update-profile", verifyToken, (req, res) => {
+  try {
+    console.log(req.userData);
+    var permision = req.userData.claims.includes("user.update-profile");
+    if (!permision) {
+      res.json({ status: false, message: "You do not have permision." });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+});
 router.delete("/test-security", verifyToken, (req, res) => {
   console.log(req.userData);
   var permision = req.userData.claims.includes("user.test1");
