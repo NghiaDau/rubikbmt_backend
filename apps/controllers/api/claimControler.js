@@ -13,7 +13,7 @@ router.post("/add", async function (req, res) {
       claimName
     );
     if (existingClaim) {
-      return res.status(400).json({
+      return res.status(409).json({
         message: "Claim name already exists for this role",
       });
     }
@@ -39,7 +39,7 @@ router.post("/update", async function (req, res) {
       claimName
     );
     if (existingClaim) {
-      return res.status(400).json({
+      return res.status(409).json({
         message: "Claim name already exists for this role",
       });
     }

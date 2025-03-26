@@ -12,7 +12,7 @@ router.post("/add", async function (req, res) {
     var existingRole = await roleService.getRoleByRoleName(rolename);
     console.log(existingRole);
     if (existingRole) {
-      return res.json({
+      return res.status(409).json({
         status: false,
         message: "Role name already exists",
       });
@@ -20,7 +20,7 @@ router.post("/add", async function (req, res) {
     var role = new Role();
     role.roleName = rolename;
     var result = await roleService.insertRole(role);
-    return res.json({
+    return res.status(200).json({
       status: true,
       message: "Role added successfully",
     });
@@ -36,7 +36,7 @@ router.post("/update", async function (req, res) {
     var id = req.query.id;
     var existingRoleId = await roleService.getRoleById(id);
     if (!existingRoleId) {
-      return res.json({
+      return res.status(404).json({
         status: false,
         message: "RoleId not found",
       });
@@ -44,7 +44,7 @@ router.post("/update", async function (req, res) {
     var existingRole = await roleService.getRoleByRoleName(rolename);
     if (existingRole) {
       if (existingRole._id.toString() != id) {
-        return res.json({
+        return res.status(409).json({
           status: false,
           message: "Role name already exists",
         });
@@ -54,7 +54,7 @@ router.post("/update", async function (req, res) {
     role._id = new ObjectId(id);
     role.roleName = rolename;
     var result = await roleService.updateRole(role);
-    return res.json({
+    return res.status(200).json({
       status: true,
       message: "Role updated successfully",
     });
@@ -69,7 +69,7 @@ router.delete("/delete", async function (req, res) {
     var claimService = new ClaimService();
     var claim = await claimService.getClaimByRoleId(roleId);
     if (claim) {
-      return res.json({
+      return res.status(409).json({
         status: false,
         message: "Role is already assigned to claim",
       });
@@ -77,7 +77,7 @@ router.delete("/delete", async function (req, res) {
     var roleService = new RoleService();
     var result = await roleService.deleteRole(roleId);
 
-    return res.json({
+    return res.status(200).json({
       status: true,
       message: "Role deleted successfully",
     });

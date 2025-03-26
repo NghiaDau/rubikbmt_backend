@@ -25,14 +25,14 @@ router.post("/login", async function (req, res) {
     var authService = new AuthService();
     var user = await authService.getUserByEmail(email);
     if (!user) {
-      return res.json({
+      return res.status(404).json({
         status: false,
         message: "User not found",
       });
     }
     var checkPass = await doHashValidPassWord(password, user.password);
     if (!checkPass) {
-      return res.json({
+      return res.status(401).json({
         status: false,
         message: "Invalid password",
       });
@@ -63,7 +63,7 @@ router.post("/login", async function (req, res) {
       { expiresIn: jwtExpirySeconds }
     );
 
-    return res.json({
+    return res.status(200).json({
       status: true,
       message: "Login successful",
       token: token,
@@ -78,7 +78,9 @@ router.post("/register", async function (req, res) {
   var authService = new AuthService();
   var existingUser = await authService.getUserByEmail(email);
   if (existingUser) {
-    return res.json({ status: false, message: "Email already exist." });
+    return res
+      .status(409)
+      .json({ status: false, message: "Email already exist." });
   }
 
   var user = new User();
@@ -103,7 +105,7 @@ router.post("/register", async function (req, res) {
   userRole.userId = result.insertedId.toString();
   userRole.roleId = role._id.toString();
   var result1 = await userRoleService.insertUserRole(userRole);
-  res.json({
+  res.status(200).json({
     status: true,
     message: "User registered successfully",
     user: result,
@@ -118,7 +120,7 @@ router.post("/change-password", verifyToken, async (req, res) => {
     var existingUser = await authService.getUserByEmail(email);
     if (!existingUser) {
       return res
-        .status(401)
+        .status(404)
         .json({ success: false, message: "Email does not exist" });
     }
 
@@ -127,7 +129,7 @@ router.post("/change-password", verifyToken, async (req, res) => {
       existingUser.password
     );
     if (!checkPass) {
-      return res.json({
+      return res.status(401).json({
         status: false,
         message: "Invalid password",
       });
@@ -136,7 +138,9 @@ router.post("/change-password", verifyToken, async (req, res) => {
     var hashedPassword = await doHashPassword(newPassword, 10);
     existingUser.password = hashedPassword;
     var result = await authService.updateUser(existingUser);
-    res.json({ status: true, message: "Password changed successfully" });
+    res
+      .status(200)
+      .json({ status: true, message: "Password changed successfully" });
   } catch (error) {
     console.log(error);
   }
@@ -149,7 +153,7 @@ router.post("/forgot-password", async (req, res) => {
     var existingUser = await authService.getUserByEmail(email);
     if (!existingUser) {
       return res
-        .status(401)
+        .status(404)
         .json({ success: false, message: "Email does not exist" });
     }
 
@@ -163,7 +167,9 @@ router.post("/forgot-password", async (req, res) => {
     var hashedPassword = await doHashPassword(generatePass, 10);
     existingUser.password = hashedPassword;
     var result = await authService.updateUser(existingUser);
-    res.json({ status: true, message: "Check email for new password" });
+    res
+      .status(200)
+      .json({ status: true, message: "Check email for new password" });
   } catch (error) {
     console.log(error);
   }
@@ -174,7 +180,9 @@ router.post("/update-profile", verifyToken, (req, res) => {
     console.log(req.userData);
     var permision = req.userData.claims.includes("user.update-profile");
     if (!permision) {
-      res.json({ status: false, message: "You do not have permision." });
+      res
+        .status(403)
+        .json({ status: false, message: "You do not have permision." });
     }
   } catch (error) {
     console.log(error);
@@ -184,7 +192,9 @@ router.delete("/test-security", verifyToken, (req, res) => {
   console.log(req.userData);
   var permision = req.userData.claims.includes("user.test1");
   if (!permision) {
-    res.json({ status: false, message: "You do not have permision." });
+    res
+      .status(403)
+      .json({ status: false, message: "You do not have permision." });
   }
   res.json({ message: "OK ban oi" });
 });

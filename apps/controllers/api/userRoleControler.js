@@ -16,7 +16,7 @@ router.post("/add", async function (req, res) {
     );
     console.log(existingUserRole);
     if (existingUserRole) {
-      return res.json({
+      return res.status(409).json({
         status: false,
         message: "Role already exists for user",
       });
@@ -25,7 +25,7 @@ router.post("/add", async function (req, res) {
     userRole.userId = userId;
     userRole.roleId = roleId;
     var result = await userRoleService.insertUserRole(userRole);
-    return res.json({
+    return res.status(200).json({
       status: true,
       message: "User and Role added successfully",
     });
@@ -41,7 +41,7 @@ router.post("/update", async function (req, res) {
     var id = req.query.id;
     var existingRoleId = await userRoleService.getUserRoleById(id);
     if (!existingRoleId) {
-      return res.json({
+      return res.status(404).json({
         status: false,
         message: "User role not found",
       });
@@ -52,7 +52,7 @@ router.post("/update", async function (req, res) {
     );
     console.log(existingUserRole);
     if (existingUserRole) {
-      return res.json({
+      return res.status(409).json({
         status: false,
         message: "Role already exists for user",
       });
@@ -62,7 +62,7 @@ router.post("/update", async function (req, res) {
     userRole.roleId = roleId;
     var result = await userRoleService.updateUserRole(userRole);
 
-    return res.json({
+    return res.status(200).json({
       status: true,
       message: "User Role updated successfully",
     });
@@ -76,7 +76,7 @@ router.delete("/delete", async function (req, res) {
     var id = req.query.id;
     var userRoleService = new UserRoleService();
     let result = await userRoleService.delteUserRole(id);
-    return res.json({
+    return res.status(200).json({
       status: true,
       message: "User role deleted successfully",
     });
