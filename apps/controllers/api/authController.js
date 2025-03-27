@@ -210,6 +210,7 @@ router.post("/logout", verifyToken, async (req, res) => {
 router.get("/get-user", verifyToken, async (req, res) => {
   try {
     var email = req.userData.user;
+    console.log(req.userData);
     var authService = new AuthService();
     var existingUser = await authService.getUserByEmailIngnorePassword(email);
     if (!existingUser) {
@@ -221,7 +222,9 @@ router.get("/get-user", verifyToken, async (req, res) => {
     return res.status(200).json({
       status: true,
       message: "ok",
-      data: existingUser,
+      user: existingUser,
+      roles: req.userData.roles,
+      claims: req.userData.claims,
     });
   } catch (error) {
     console.log(error);
