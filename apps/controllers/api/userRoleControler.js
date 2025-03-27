@@ -5,9 +5,15 @@ var Role = require("./../../entities/role");
 var RoleService = require("./../../services/roleService");
 var UserRole = require("./../../entities/user_role");
 var UserRoleService = require("./../../services/userRoleService");
-
-router.post("/add", async function (req, res) {
+var verifyToken = require("./../../utils/verifyToken");
+router.post("/add", verifyToken, async function (req, res) {
   try {
+    var permision = req.userData.claims.includes("user-role.add");
+    if (!permision) {
+      return res
+        .status(403)
+        .json({ status: false, message: "You do not have permision." });
+    }
     var { userId, roleId } = req.body;
     var userRoleService = new UserRoleService();
     var existingUserRole = await userRoleService.getUserRoleByBoth(
@@ -34,8 +40,14 @@ router.post("/add", async function (req, res) {
   }
 });
 
-router.post("/update", async function (req, res) {
+router.post("/update", verifyToken, async function (req, res) {
   try {
+    var permision = req.userData.claims.includes("user-role.update");
+    if (!permision) {
+      return res
+        .status(403)
+        .json({ status: false, message: "You do not have permision." });
+    }
     var { userId, roleId } = req.body;
     var userRoleService = new UserRoleService();
     var id = req.query.id;
@@ -71,8 +83,14 @@ router.post("/update", async function (req, res) {
   }
 });
 
-router.delete("/delete", async function (req, res) {
+router.delete("/delete", verifyToken, async function (req, res) {
   try {
+    var permision = req.userData.claims.includes("user-role.delete");
+    if (!permision) {
+      return res
+        .status(403)
+        .json({ status: false, message: "You do not have permision." });
+    }
     var id = req.query.id;
     var userRoleService = new UserRoleService();
     let result = await userRoleService.delteUserRole(id);

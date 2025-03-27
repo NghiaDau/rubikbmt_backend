@@ -3,10 +3,16 @@ var router = express.Router();
 var Claim = require("./../../entities/claim");
 var ClaimService = require("./../../services/claimService");
 var { ObjectId } = require("mongodb");
+var verifyToken = require("./../../utils/verifyToken");
 
-
-router.post("/add", async function (req, res) {
+router.post("/add", verifyToken, async function (req, res) {
   try {
+    var permision = req.userData.claims.includes("claim.add");
+    if (!permision) {
+      return res
+        .status(403)
+        .json({ status: false, message: "You do not have permision." });
+    }
     var { roleId, claimName } = req.body;
     var claimService = new ClaimService();
     var existingClaim = await claimService.getClaimByRoleAndClaimName(
@@ -31,8 +37,14 @@ router.post("/add", async function (req, res) {
   }
 });
 
-router.post("/update", async function (req, res) {
+router.post("/update", verifyToken, async function (req, res) {
   try {
+    var permision = req.userData.claims.includes("claim.update");
+    if (!permision) {
+      return res
+        .status(403)
+        .json({ status: false, message: "You do not have permision." });
+    }
     var { roleId, claimName } = req.body;
     var claimService = new ClaimService();
     var existingClaim = await claimService.getClaimByRoleAndClaimName(
@@ -58,8 +70,14 @@ router.post("/update", async function (req, res) {
   }
 });
 
-router.delete("/delete", async function (req, res) {
+router.delete("/delete", verifyToken, async function (req, res) {
   try {
+    var permision = req.userData.claims.includes("claim.delete");
+    if (!permision) {
+      return res
+        .status(403)
+        .json({ status: false, message: "You do not have permision." });
+    }
     var claimService = new ClaimService();
     var result = await claimService.deleteClaim(req.query.id);
     res.status(200).json({

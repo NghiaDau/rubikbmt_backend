@@ -10,31 +10,32 @@
     "claims":{
         "user":{
             "add" : "user.add",
-            "updated":"user.updated",
+            "update":"user.update",
             "delete":"user.delete",
-            "changePassword":"user.changePassword",
+            "change-password":"user.change-password",
             "get-user":"user.get-user",
             "list-user":"user.list-user",
-            "test_security":"user.test-security",
-            "update_profile":"user.update-profile"
+            "test-security":"user.test-security",
+            "update-profile":"user.update-profile"
         },
         "role":{
             "add" : "role.add",
-            "updated":"role.updated",
-            "delete":"role.delete",
-            "get-role":"role.get-role",
-            "list-role":"role.list-role"
+            "update":"role.update",
+            "delete":"role.delete"
         },
-        "permission":{
-            "add" : "permission.add",
-            "updated":"permission.updated",
-            "delete":"permission.delete",
-            "get-permission":"permission.get-permission",
-            "list-permission":"permission.list-permission"
+        "claims":{
+            "add" : "claims.add",
+            "update":"claims.update",
+            "delete":"claims.delete"
+        },
+        "user-role":{
+            "add" : "user-role.add",
+            "update":"user-role.update",
+            "delete":"user-role.delete"
         },
         "course":{
             "add" : "course.add",
-            "updated":"course.updated",
+            "update":"course.update",
             "delete":"course.delete",
             "get-course":"course.get-course",
             "list-course":"course.list-course"

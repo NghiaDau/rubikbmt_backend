@@ -4,9 +4,16 @@ var { ObjectId } = require("mongodb");
 var Role = require("./../../entities/role");
 var RoleService = require("./../../services/roleService");
 var ClaimService = require("./../../services/claimService");
+var verifyToken = require("./../../utils/verifyToken");
 
-router.post("/add", async function (req, res) {
+router.post("/add", verifyToken, async function (req, res) {
   try {
+    var permision = req.userData.claims.includes("role.add");
+    if (!permision) {
+      return res
+        .status(403)
+        .json({ status: false, message: "You do not have permision." });
+    }
     var { rolename } = req.body;
     var roleService = new RoleService();
     var existingRole = await roleService.getRoleByRoleName(rolename);
@@ -29,8 +36,14 @@ router.post("/add", async function (req, res) {
   }
 });
 
-router.post("/update", async function (req, res) {
+router.post("/update", verifyToken, async function (req, res) {
   try {
+    var permision = req.userData.claims.includes("role.update");
+    if (!permision) {
+      return res
+        .status(403)
+        .json({ status: false, message: "You do not have permision." });
+    }
     var roleService = new RoleService();
     var { rolename } = req.body;
     var id = req.query.id;
@@ -63,8 +76,14 @@ router.post("/update", async function (req, res) {
   }
 });
 
-router.delete("/delete", async function (req, res) {
+router.delete("/delete", verifyToken, async function (req, res) {
   try {
+    var permision = req.userData.claims.includes("role.delete");
+    if (!permision) {
+      return res
+        .status(403)
+        .json({ status: false, message: "You do not have permision." });
+    }
     var roleId = req.query.id;
     var claimService = new ClaimService();
     var claim = await claimService.getClaimByRoleId(roleId);

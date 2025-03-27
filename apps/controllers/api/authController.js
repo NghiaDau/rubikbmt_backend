@@ -30,14 +30,14 @@ router.post("/login", async function (req, res) {
     if (!user) {
       return res.status(404).json({
         status: false,
-        message: "User not found",
+        message: "Tài khoản không tồn tại!",
       });
     }
     var checkPass = await doHashValidPassWord(password, user.password);
     if (!checkPass) {
       return res.status(401).json({
         status: false,
-        message: "Invalid password",
+        message: "Sai mật khẩu!",
       });
     }
 
@@ -74,7 +74,7 @@ router.post("/login", async function (req, res) {
 
     return res.status(200).json({
       status: true,
-      message: "Login successful",
+      message: "Đăng nhập thành công!",
     });
   } catch (error) {
     console.log(error);
@@ -88,7 +88,7 @@ router.post("/register", async function (req, res) {
   if (existingUser) {
     return res
       .status(409)
-      .json({ status: false, message: "Email already exist." });
+      .json({ status: false, message: "Email đã được đăng ký!" });
   }
 
   var user = new User();
@@ -117,7 +117,7 @@ router.post("/register", async function (req, res) {
   var result1 = await userRoleService.insertUserRole(userRole);
   res.status(200).json({
     status: true,
-    message: "User registered successfully",
+    message: "Đăng ký thành công!",
     user: result,
   });
 });
@@ -128,7 +128,7 @@ router.post("/change-password", verifyToken, async (req, res) => {
     if (!permision) {
       return res
         .status(403)
-        .json({ status: false, message: "You do not have permision." });
+        .json({ status: false, message: "Bạn không có quyền truy cập!" });
     }
     var email = req.userData.user;
     var { oldPassword, newPassword } = req.body;
@@ -137,7 +137,7 @@ router.post("/change-password", verifyToken, async (req, res) => {
     if (!existingUser) {
       return res
         .status(404)
-        .json({ success: false, message: "Email does not exist" });
+        .json({ success: false, message: "Email không tồn tại!" });
     }
 
     var checkPass = await doHashValidPassWord(
@@ -147,16 +147,14 @@ router.post("/change-password", verifyToken, async (req, res) => {
     if (!checkPass) {
       return res.status(401).json({
         status: false,
-        message: "Invalid password",
+        message: "Sai mật khẩu cũ!",
       });
     }
 
     var hashedPassword = await doHashPassword(newPassword, 10);
     existingUser.password = hashedPassword;
     var result = await authService.updateUser(existingUser);
-    res
-      .status(200)
-      .json({ status: true, message: "Password changed successfully" });
+    res.status(200).json({ status: true, message: "Đổi mật khẩu thành công!" });
   } catch (error) {
     console.log(error);
   }
@@ -170,7 +168,7 @@ router.post("/forgot-password", async (req, res) => {
     if (!existingUser) {
       return res
         .status(404)
-        .json({ success: false, message: "Email does not exist" });
+        .json({ success: false, message: "Email không tồn tại!" });
     }
 
     var generatePass = generatePassword(8);
@@ -185,7 +183,7 @@ router.post("/forgot-password", async (req, res) => {
     var result = await authService.updateUser(existingUser);
     res
       .status(200)
-      .json({ status: true, message: "Check email for new password" });
+      .json({ status: true, message: "Kiểm tra email để lấy mật khẩu mới" });
   } catch (error) {
     console.log(error);
   }
@@ -200,7 +198,7 @@ router.post("/logout", verifyToken, async (req, res) => {
     });
     return res.status(200).json({
       status: true,
-      message: "Logout successful",
+      message: "Đăng xuất thành công!",
     });
   } catch (error) {
     console.log(error);
@@ -209,6 +207,14 @@ router.post("/logout", verifyToken, async (req, res) => {
 
 router.get("/get-user", verifyToken, async (req, res) => {
   try {
+    var permision = req.userData.claims.includes(
+      config.claims.user["get-user"]
+    );
+    if (!permision) {
+      return res
+        .status(403)
+        .json({ status: false, message: "Bạn không có quyền truy cập!" });
+    }
     var email = req.userData.user;
     console.log(req.userData);
     var authService = new AuthService();
@@ -216,12 +222,12 @@ router.get("/get-user", verifyToken, async (req, res) => {
     if (!existingUser) {
       return res
         .status(404)
-        .json({ success: false, message: "Email does not exist" });
+        .json({ success: false, message: "Email không tồn tại!" });
     }
 
     return res.status(200).json({
       status: true,
-      message: "ok",
+      message: "Láy thông tin người dùng thành công!",
       user: existingUser,
       roles: req.userData.roles,
       claims: req.userData.claims,
@@ -237,12 +243,7 @@ router.get("/list-user", verifyToken, async (req, res) => {
     if (!permision) {
       return res
         .status(403)
-        .json({ status: false, message: "You do not have permision." });
-    }
-    if (!permision) {
-      return res
-        .status(403)
-        .json({ status: false, message: "You do not have permision." });
+        .json({ status: false, message: "Bạn không có quyền truy cập!" });
     }
     var { page, limit } = req.query;
     page = parseInt(page);
@@ -251,7 +252,7 @@ router.get("/list-user", verifyToken, async (req, res) => {
     var userList = await authService.getUserList(page, limit);
     return res.status(200).json({
       status: true,
-      message: "ok",
+      message: "Lấy danh sách người dùng thành công!",
       data: userList,
     });
   } catch (error) {
@@ -271,7 +272,7 @@ router.post(
       if (!permision) {
         return res
           .status(403)
-          .json({ status: false, message: "You do not have permision." });
+          .json({ status: false, message: "Bạn không có quyền truy cập!" });
       }
       var email = req.userData.user;
       var authService = new AuthService();
@@ -279,7 +280,7 @@ router.post(
       if (!existingUser) {
         return res
           .status(404)
-          .json({ success: false, message: "Email does not exist" });
+          .json({ success: false, message: "Email không tồn tại" });
       }
       var {
         firstName,
@@ -297,20 +298,18 @@ router.post(
       existingUser.parentName = parentName;
       console.log(req.file);
       if (req.file) {
-        console.log("ok");
         var bucket = new GridFSBucket(authService.client.db(), {
           bucketName: "avatar",
         });
         var uploadStream = bucket.openUploadStream(req.file.originalname);
         uploadStream.end(req.file.buffer);
         existingUser.avatar = uploadStream.id;
-        //console.log(pro.Image);
       }
 
       var result = await authService.updateUser(existingUser);
       return res.status(200).json({
         status: true,
-        message: "ok",
+        message: "Cập nhật thông tin người dùng thành công!",
         data: existingUser,
       });
     } catch (error) {
@@ -333,7 +332,7 @@ router.get("/get-image/:id", async function (req, res) {
     });
 
     downloadStream.on("error", (err) => {
-      res.status(404).send({ message: "Image not found" });
+      res.status(404).send({ message: "Ảnh không tồn tại!" });
     });
 
     downloadStream.on("end", () => {
@@ -341,19 +340,17 @@ router.get("/get-image/:id", async function (req, res) {
     });
   } catch (error) {
     console.error("Error retrieving image:", error);
-    res
-      .status(500)
-      .send({ message: "An error occurred while retrieving the image" });
+    res.status(500).send({ message: "Đã xẩy ra lỗi khi lấy ảnh" });
   }
 });
 router.post("/test-security", verifyToken, (req, res) => {
   var permision = req.userData.claims.includes(
-    config.claims.user.test_security
+    config.claims.user["test-security"]
   );
   if (!permision) {
     return res
       .status(403)
-      .json({ status: false, message: "You do not have permision." });
+      .json({ status: false, message: "Bạn không có quyền truy cập" });
   }
   return res.json({ message: "OK ban oi" });
 });
