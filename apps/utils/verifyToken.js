@@ -33,7 +33,6 @@ verifyToken = (req, res, next) => {
   if (!token) {
     return res.status(401).json({ status: false, message: "Unauthorized" });
   }
-  console.log(token);
   jsonwebtoken.verify(token, config.jwt.access_secret, (err, user) => {
     if (err) {
       return res.status(403).json({ status: false, message: "Forbidden" });
@@ -46,7 +45,6 @@ verifyToken = (req, res, next) => {
       roles: decode.roles,
       claims: decode.claims,
     });
-    console.log(details);
     next();
   } catch (error) {
     return res

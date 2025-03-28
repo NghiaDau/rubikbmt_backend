@@ -15,7 +15,7 @@ var {
   generatePassword,
 } = require("../../utils/hashing");
 var jsonwebtoken = require("jsonwebtoken");
-const jwtExpirySecondsAccess = 30;
+const jwtExpirySecondsAccess = 600;
 const jwtExpirySecondsRefress = 7 * 24 * 360 * 60;
 var config = require("./../../../config/setting.json");
 var verifyToken = require("./../../utils/verifyToken");
@@ -46,19 +46,18 @@ router.post("/login", async function (req, res) {
     var listRoleId = await userRoleService.getRoleIdsByUserId(
       user._id.toString()
     );
-    var authorities = [];
-    for (var element of listRoleId) {
-      var role = await roleService.getRoleById(element);
-      authorities.push(role.roleName);
-    }
-    var claimService = new ClaimService();
-    var claimService = new ClaimService();
-    var claims = new Set();
-    for (var element of listRoleId) {
-      var claims1 = await claimService.getClaimsByRoleId(element.toString());
-      claims1.forEach((claim) => claims.add(claim));
-    }
-    claims = Array.from(claims);
+
+    const roles = await Promise.all(
+      listRoleId.map((id) => roleService.getRoleById(id))
+    );
+    const authorities = roles.map((role) => role.roleName);
+
+    const claimService = new ClaimService();
+    const claimsArrays = await Promise.all(
+      listRoleId.map((id) => claimService.getClaimsByRoleId(id.toString()))
+    );
+    const allClaims = claimsArrays.flat();
+    const claims = Array.from(new Set(allClaims));
 
     var token = jsonwebtoken.sign(
       { user: email, roles: authorities, claims: claims },
@@ -89,6 +88,8 @@ router.post("/login", async function (req, res) {
     return res.status(200).json({
       status: true,
       message: "Đăng nhập thành công!",
+      token: token,
+      refreshToken: refreshToken,
     });
   } catch (error) {
     console.log(error);
@@ -231,7 +232,7 @@ router.post("/refresh-token", async (req, res) => {
 
     let decoded;
     try {
-      decoded = jsonwebtoken.verify(refreshToken, config.jwt.refreshSecret);
+      decoded = jsonwebtoken.verify(refreshToken, config.jwt.refresh_secret);
     } catch (error) {
       return res.status(401).json({
         status: false,
