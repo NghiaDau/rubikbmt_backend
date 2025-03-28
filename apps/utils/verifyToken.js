@@ -33,7 +33,7 @@ verifyToken = (req, res, next) => {
   if (!token) {
     return res.status(401).json({ status: false, message: "Unauthorized" });
   }
-
+  console.log(token);
   jsonwebtoken.verify(token, config.jwt.secret, (err, user) => {
     if (err) {
       return res.status(403).json({ status: false, message: "Forbidden" });

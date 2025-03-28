@@ -15,13 +15,13 @@ var {
   generatePassword,
 } = require("../../utils/hashing");
 var jsonwebtoken = require("jsonwebtoken");
-const jwtExpirySeconds = 600;
+const jwtExpirySecondsAccess = 30;
+const jwtExpirySecondsRefress = 7 * 24 * 360 * 60;
 var config = require("./../../../config/setting.json");
 var verifyToken = require("./../../utils/verifyToken");
 var multer = require("multer");
 var storage = multer.memoryStorage();
 var upload = multer({ storage: storage });
-
 router.post("/login", async function (req, res) {
   try {
     var { email, password } = req.body;
@@ -62,11 +62,25 @@ router.post("/login", async function (req, res) {
 
     var token = jsonwebtoken.sign(
       { user: email, roles: authorities, claims: claims },
-      config.jwt.secret,
-      { expiresIn: jwtExpirySeconds }
+      config.jwt.access_secret,
+      { expiresIn: jwtExpirySecondsAccess }
     );
+
+    var refreshToken = jsonwebtoken.sign(
+      { user: email },
+      config.jwt.refresh_secret,
+      { expiresIn: jwtExpirySecondsRefress }
+    );
+
+    res.cookie("refreshToken", refreshToken, {
+      maxAge: 7 * 24 * 3600 * 1000,
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+    });
+
     res.cookie("token", token, {
-      maxAge: jwtExpirySeconds * 1000,
+      maxAge: jwtExpirySecondsAccess * 1000,
       httpOnly: true,
       secure: false,
       sameSite: "strict",
@@ -205,6 +219,80 @@ router.post("/logout", verifyToken, async (req, res) => {
   }
 });
 
+router.post("/refresh-token", async (req, res) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      return res.status(401).json({
+        status: false,
+        message: "Refresh token không tồn tại.",
+      });
+    }
+
+    let decoded;
+    try {
+      decoded = jsonwebtoken.verify(refreshToken, config.jwt.refreshSecret);
+    } catch (error) {
+      return res.status(401).json({
+        status: false,
+        message: "Refresh token không hợp lệ hoặc đã hết hạn.",
+      });
+    }
+
+    const authService = new AuthService();
+    const user = await authService.getUserByEmail(decoded.user);
+    if (!user) {
+      return res.status(404).json({
+        status: false,
+        message: "Không tìm thấy người dùng.",
+      });
+    }
+
+    var roleService = new RoleService();
+    var userRoleService = new UserRoleService();
+    var listRoleId = await userRoleService.getRoleIdsByUserId(
+      user._id.toString()
+    );
+    var authorities = [];
+    for (var element of listRoleId) {
+      var role = await roleService.getRoleById(element);
+      authorities.push(role.roleName);
+    }
+    var claimService = new ClaimService();
+    var claimsSet = new Set();
+    for (var element of listRoleId) {
+      var claims1 = await claimService.getClaimsByRoleId(element.toString());
+      claims1.forEach((claim) => claimsSet.add(claim));
+    }
+    var claims = Array.from(claimsSet);
+
+    var newAccessToken = jsonwebtoken.sign(
+      { user: user.email, roles: authorities, claims: claims },
+      config.jwt.secret,
+      { expiresIn: jwtExpirySecondsAccess }
+    );
+
+    res.cookie("token", newAccessToken, {
+      maxAge: jwtExpirySecondsAccess * 1000,
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+    });
+
+    return res.status(200).json({
+      status: true,
+      message: "Access token đã được làm mới thành công.",
+      token: newAccessToken,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: false,
+      message: "Đã xảy ra lỗi khi làm mới access token.",
+    });
+  }
+});
+
 router.get("/get-user", verifyToken, async (req, res) => {
   try {
     var permision = req.userData.claims.includes(
@@ -249,11 +337,17 @@ router.get("/list-user", verifyToken, async (req, res) => {
     page = parseInt(page);
     limit = parseInt(limit);
     var authService = new AuthService();
+    var totalUsers = await authService.getUserCount();
+    var totalPages = Math.ceil(totalUsers / limit);
     var userList = await authService.getUserList(page, limit);
     return res.status(200).json({
       status: true,
       message: "Lấy danh sách người dùng thành công!",
       data: userList,
+      totalUsers: totalUsers,
+      totalPages: totalPages,
+      currentPage: page,
+      limit: limit,
     });
   } catch (error) {
     console.log(error);
