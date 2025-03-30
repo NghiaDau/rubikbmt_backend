@@ -111,17 +111,10 @@ router.post("/register", async function (req, res) {
   user.lastName = lastName;
   user.email = email;
   user.phone = phone;
-
-  var generatePass = generatePassword(8);
-  let info = await transpost.sendMail({
-    from: process.env.NODE_CODE_SENDING_EMAIL_ADRESS,
-    to: email,
-    subject: "Rubikbmt Password",
-    text: `Mật khẩu của bạn là: ${generatePass}`,
-  });
-
-  user.password = await doHashPassword(generatePass, 10);
+  user.password = null;
+  user.status = 0;
   user.createDate = Date.now();
+
   var result = await authService.insertUser(user);
   var roleService = new RoleService();
   var role = await roleService.getRoleByRoleName("student");
@@ -130,9 +123,10 @@ router.post("/register", async function (req, res) {
   userRole.userId = result.insertedId.toString();
   userRole.roleId = role._id.toString();
   var result1 = await userRoleService.insertUserRole(userRole);
+
   res.status(200).json({
     status: true,
-    message: "Đăng ký thành công!",
+    message: "Đăng ký thành công! Vui lòng chờ xác nhận từ admin.",
     user: result,
   });
 });
@@ -269,7 +263,7 @@ router.post("/refresh-token", async (req, res) => {
 
     var newAccessToken = jsonwebtoken.sign(
       { user: user.email, roles: authorities, claims: claims },
-      config.jwt.secret,
+      config.jwt.refresh_secret,
       { expiresIn: jwtExpirySecondsAccess }
     );
 
@@ -338,13 +332,33 @@ router.get("/list-user", verifyToken, async (req, res) => {
     page = parseInt(page);
     limit = parseInt(limit);
     var authService = new AuthService();
+    var roleService = new RoleService();
+    var userRoleService = new UserRoleService();
+
     var totalUsers = await authService.getUserCount();
     var totalPages = Math.ceil(totalUsers / limit);
     var userList = await authService.getUserList(page, limit);
+
+    // Lấy roles cho từng user
+    const usersWithRoles = await Promise.all(
+      userList.map(async (user) => {
+        const listRoleId = await userRoleService.getRoleIdsByUserId(
+          user._id.toString()
+        );
+        const roles = await Promise.all(
+          listRoleId.map((id) => roleService.getRoleById(id))
+        );
+        return {
+          ...user,
+          roles: roles.map((role) => role.roleName),
+        };
+      })
+    );
+
     return res.status(200).json({
       status: true,
       message: "Lấy danh sách người dùng thành công!",
-      data: userList,
+      data: usersWithRoles,
       totalUsers: totalUsers,
       totalPages: totalPages,
       currentPage: page,
@@ -361,38 +375,44 @@ router.post(
   verifyToken,
   async (req, res) => {
     try {
-      var permision = req.userData.claims.includes(
-        config.claims.user.update_profile
+      var permission = req.userData.claims.includes(
+        config.claims.user["update-profile"]
       );
-      if (!permision) {
+      if (!permission) {
         return res
           .status(403)
           .json({ status: false, message: "Bạn không có quyền truy cập!" });
       }
-      var email = req.userData.user;
-      var authService = new AuthService();
-      var existingUser = await authService.getUserByEmail(email);
-      if (!existingUser) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Email không tồn tại" });
-      }
+      // var email = req.userData.user;
+
       var {
         firstName,
         lastName,
         phone,
         dateOfBirth,
-        desscription,
+        description,
         parentName,
+        email,
+        _id,
       } = req.body;
+      var authService = new AuthService();
+      var existingUser = await authService.getUserById(_id);
+      if (!existingUser) {
+        return res
+          .status(404)
+          .json({ success: false, message: "User không tồn tại" });
+      }
+      existingUser.email = email;
       existingUser.phone = phone;
       existingUser.firstName = firstName;
       existingUser.lastName = lastName;
       existingUser.dateOfBirth = dateOfBirth;
-      existingUser.desscription = desscription;
+      existingUser.description = description;
       existingUser.parentName = parentName;
       console.log(req.file);
-      if (req.file) {
+      if (req.body.avatar === "null" || req.body.avatar === "") {
+        existingUser.avatar = null;
+      } else if (req.file) {
         var bucket = new GridFSBucket(authService.client.db(), {
           bucketName: "avatar",
         });
@@ -412,6 +432,7 @@ router.post(
     }
   }
 );
+
 router.get("/get-image/:id", async function (req, res) {
   try {
     var autheService = new AuthService();
@@ -448,6 +469,188 @@ router.post("/test-security", verifyToken, (req, res) => {
       .json({ status: false, message: "Bạn không có quyền truy cập" });
   }
   return res.json({ message: "OK ban oi" });
+});
+
+router.post("/confirm-account", verifyToken, async function (req, res) {
+  try {
+    var permision = req.userData.claims.includes("user.confirm-account");
+    if (!permision) {
+      return res
+        .status(403)
+        .json({ status: false, message: "Bạn không có quyền truy cập!" });
+    }
+
+    var { email } = req.body;
+    var authService = new AuthService();
+    var existingUser = await authService.getUserByEmail(email);
+
+    if (!existingUser) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Email không tồn tại!" });
+    }
+
+    if (existingUser.status === 1) {
+      return res.status(400).json({
+        status: false,
+        message: "Tài khoản đã được xác nhận trước đó!",
+      });
+    }
+
+    // if (existingUser.status === -1) {
+    //   return res.status(400).json({
+    //     status: false,
+    //     message: "Tài khoản đã bị vô hiệu hóa!",
+    //   });
+    // }
+
+    // Tạo password và cập nhật status
+    var generatePass = generatePassword(8);
+    existingUser.password = await doHashPassword(generatePass, 10);
+    existingUser.status = 1;
+
+    await authService.updateUser(existingUser);
+
+    // Gửi mail password
+    await transpost.sendMail({
+      from: process.env.NODE_CODE_SENDING_EMAIL_ADRESS,
+      to: email,
+      subject: "Xác nhận tài khoản Rubikbmt",
+      text: `Xin chào ${existingUser.firstName} ${existingUser.lastName},\n\nTài khoản của bạn đã được xác nhận thành công.\nMật khẩu của bạn là: ${generatePass}`,
+    });
+
+    res.status(200).json({
+      status: true,
+      message: "Xác nhận tài khoản thành công!",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: false,
+      message: "Đã xảy ra lỗi khi xác nhận tài khoản!",
+    });
+  }
+});
+
+router.post("/add-user", verifyToken, async function (req, res) {
+  try {
+    console.log(req.body);
+    var permision = req.userData.claims.includes("user.add-user");
+    if (!permision) {
+      return res
+        .status(403)
+        .json({ status: false, message: "Bạn không có quyền truy cập!" });
+    }
+
+    var { firstName, lastName, phone, email, parentName, roles } = req.body;
+    var authService = new AuthService();
+    var existingUser = await authService.getUserByEmail(email);
+    if (existingUser) {
+      return res
+        .status(409)
+        .json({ status: false, message: "Email đã được đăng ký!" });
+    }
+
+    var user = new User();
+    user.firstName = firstName;
+    user.lastName = lastName;
+    user.email = email;
+    user.phone = phone;
+    user.parentName = parentName;
+    user.status = 1;
+    user.createDate = Date.now();
+
+    var generatePass = generatePassword(8);
+    user.password = await doHashPassword(generatePass, 10);
+
+    var result = await authService.insertUser(user);
+
+    // Thêm roles cho user
+    var userRoleService = new UserRoleService();
+    var roleService = new RoleService();
+
+    await Promise.all(
+      roles.map(async (roleName) => {
+        const role = await roleService.getRoleByRoleName(roleName);
+        if (role) {
+          var userRole = new UserRole();
+          userRole.userId = result.insertedId.toString();
+          userRole.roleId = role._id.toString();
+          await userRoleService.insertUserRole(userRole);
+        }
+      })
+    );
+
+    // Gửi mail password
+    await transpost.sendMail({
+      from: process.env.NODE_CODE_SENDING_EMAIL_ADRESS,
+      to: email,
+      subject: "Thông tin tài khoản RubikBMT",
+      text: `Xin chào ${firstName} ${lastName},\n\nTài khoản của bạn đã được tạo thành công.\nMật khẩu của bạn là: ${generatePass}`,
+    });
+
+    res.status(200).json({
+      status: true,
+      message: "Thêm người dùng thành công!",
+      user: result,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: false,
+      message: "Đã xảy ra lỗi khi thêm người dùng!",
+    });
+  }
+});
+
+router.post("/disable-account", verifyToken, async function (req, res) {
+  try {
+    var permision = req.userData.claims.includes("user.disable-account");
+    if (!permision) {
+      return res
+        .status(403)
+        .json({ status: false, message: "Bạn không có quyền truy cập!" });
+    }
+
+    var { email } = req.body;
+    var authService = new AuthService();
+    var existingUser = await authService.getUserByEmail(email);
+
+    if (!existingUser) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Email không tồn tại!" });
+    }
+
+    if (existingUser.status === -1) {
+      return res.status(400).json({
+        status: false,
+        message: "Tài khoản đã bị vô hiệu hóa trước đó!",
+      });
+    }
+
+    existingUser.status = -1;
+    await authService.updateUser(existingUser);
+
+    // Gửi mail thông báo
+    await transpost.sendMail({
+      from: process.env.NODE_CODE_SENDING_EMAIL_ADRESS,
+      to: email,
+      subject: "Thông báo vô hiệu hóa tài khoản Rubikbmt",
+      text: `Xin chào ${existingUser.firstName} ${existingUser.lastName},\n\nTài khoản của bạn đã bị vô hiệu hóa.\nVui lòng liên hệ admin để biết thêm chi tiết.`,
+    });
+
+    res.status(200).json({
+      status: true,
+      message: "Vô hiệu hóa tài khoản thành công!",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: false,
+      message: "Đã xảy ra lỗi khi vô hiệu hóa tài khoản!",
+    });
+  }
 });
 
 module.exports = router;
