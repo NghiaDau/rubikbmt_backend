@@ -51,7 +51,7 @@ router.get("/get-list", verifyToken,async function (req, res) {
 });
 
 // 🟢 API: Lấy thông tin chi tiết Course theo ID
-router.get("/get-course", verifyToken,validateObjectId, async function (req, res) {
+router.get("/get", verifyToken,validateObjectId, async function (req, res) {
   try {
       var courseService = new CourseService();
       var { id } = req.query;

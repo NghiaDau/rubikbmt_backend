@@ -97,8 +97,20 @@ class CubeSubjectService {
     }
     async searchCubeSubjects(search, skip, limit) {
         var query = search ? { name: { $regex: search, $options: "i" } } : {}; // Tìm kiếm không phân biệt hoa thường
-        var result = await this.cubeSubjectCollection.find(query).skip(skip).limit(limit);
-        return result.toArray();
+        var result = await this.cubeSubjectCollection.find(query).skip(skip).limit(limit).toArray();
+        // Duyệt từng CubeSubject để lấy danh sách cubeSkills
+        for (let cubeSubject of result) {
+            const skillIds = cubeSubject.cubeSkills.map(id => new ObjectId(id));
+
+            // Truy vấn danh sách cubeSkills theo skillIds
+            const cubeSkills = await this.cubeSkillCollection
+                .find({ _id: { $in: skillIds } })
+                .project({ name: 1 }) // Chỉ lấy field "name"
+                .toArray();
+
+            cubeSubject.cubeSkills = cubeSkills; // Gán danh sách cubeSkills vào CubeSubject
+        }
+        return result;
 
     }
     async countCubeSubject(search) {
