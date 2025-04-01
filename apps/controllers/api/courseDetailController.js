@@ -3,10 +3,12 @@ var router = express.Router();
 var CourseDetail = require("./../../entities/coursedetail");
 var CourseDetailService = require("./../../services/courseDetailService");
 var validateCourseDetail = require("./../../utils/validateCourseDetail");
+var verifyToken = require("./../../utils/verifyToken");
+var validateObjectId = require("./../../utils/validateObjectId");
 // /api/v1/courseDetail
 
 // 🟢 API: Thêm CourseDetail
-router.post("/add", validateCourseDetail, async function (req, res) {
+router.post("/add", verifyToken,validateCourseDetail, async function (req, res) {
   try {
     var { actualFee, Paid, numberOfStudied, course, student, teacher, sessions } = req.body;
 
@@ -18,24 +20,37 @@ router.post("/add", validateCourseDetail, async function (req, res) {
     var result = await courseDetailService.addCourseDetail(courseDetail, sessions);
 
     res.status(201).json({
-      message: "Course Detail added successfully",
+      message: "Thêm chi tiết khóa học thành công",
       courseDetail: result,
     });
   } catch (error) {
-    console.error("❌ Error in /add:", error);
-    res.status(500).json({ message: "Internal Server Error", error: error.message });
+    console.error("❌ Lỗi ở /add:", error);
+    res.status(500).json({ message: "Xảy ra lỗi trên Server", error: error.message });
+  }
+});
+
+// 🟢 API: Lấy danh sách CourseDetail
+router.get("/get-list", verifyToken, async function (req, res) {
+  try {
+    var courseDetailService = new CourseDetailService();
+    var result = await courseDetailService.getCourseDetails();
+    if (!result) {
+      return res.status(404).json({ message: "Không tìm thấy chi tiết khóa học" });
+    }
+    res.status(200).json({
+      message: "Lấy danh sách chi tiết khóa học thành công",
+      courseDetails: result,
+    });
+  } catch (error) {
+    console.error("❌ Lỗi ở /get-list:", error);
+    res.status(500).json({ message: "Xảy ra lỗi trên Server", error: error.message });
   }
 });
 
 // 🟢 API: Lấy thông tin chi tiết CourseDetail theo ID
-router.get("/get-course-detail", async function (req, res) {
+router.get("/get", verifyToken, validateObjectId, async function (req, res) {
   try {
     var { id } = req.query;
-
-    if (!id) {
-      return res.status(400).json({ message: "Missing courseDetail ID" });
-    }
-
     var courseDetailService = new CourseDetailService();
     var result = await courseDetailService.getCourseDetailById(id);
 
@@ -46,24 +61,20 @@ router.get("/get-course-detail", async function (req, res) {
     }
 
     res.status(200).json({
-      message: "Course Detail fetched successfully",
+      message: "Lấy chi tiết khóa học thành công",
       courseDetail: result,
     });
   } catch (error) {
-    console.error("❌ Error in /get-course-detail:", error);
-    res.status(500).json({ message: "Internal Server Error", error: error.message });
+    console.error("❌ Lỗi ở /get-course-detail:", error);
+    res.status(500).json({ message: "Xảy ra lỗi trên Server", error: error.message });
   }
 });
 
 // 🟢 API: Cập nhật CourseDetail
-router.put("/update", async function (req, res) {
+router.put("/update",verifyToken, validateObjectId, async function (req, res) {
   try {
     var { _id } = req.query;
     var { actualFee, Paid, numberOfStudied, course, student, teacher, evaluation, session } = req.body;
-
-    if (!_id) {
-      return res.status(400).json({ message: "Missing _id for update" });
-    }
 
     var courseDetail = {
       _id, actualFee, Paid, numberOfStudied, course, student, teacher, evaluation, session
@@ -73,38 +84,38 @@ router.put("/update", async function (req, res) {
     var result = await courseDetailService.updateCourseDetail(courseDetail);
 
     res.status(200).json({
-      message: "Course Detail updated successfully",
+      message: "Cập nhật chi tiết khóa học thành công",
       courseDetail: result,
     });
   } catch (error) {
-    console.error("❌ Error in /update:", error);
-    res.status(500).json({ message: "Internal Server Error", error: error.message });
+    console.error("❌ Lỗi ở /update:", error);
+    res.status(500).json({ message: "Xảy ra lỗi trên Server", error: error.message });
   }
 });
 
 // 🟢 API: Đánh giá CourseDetail
-router.post("/evaluation", async function (req, res) {
+router.post("/evaluation",verifyToken, validateObjectId, async function (req, res) {
   try {
     var { id } = req.query;
     var { evaluations } = req.body;
 
-    if (!id || !Array.isArray(evaluations)) {
-      return res.status(400).json({ message: "Invalid request data" });
+    if (!Array.isArray(evaluations)) {
+      return res.status(400).json({ message: "Dữ liệu đánh giá không hợp lệ" });
     }
 
     var courseDetailService = new CourseDetailService();
     var result = await courseDetailService.evaluateCourseDetail(id, evaluations);
 
     res.status(200).json({
-      message: "Course Detail evaluated successfully",
+      message: "Đánh giá kỹ năng thành công",
       courseDetail: result,
     });
   } catch (error) {
-    console.error("❌ Error in /evaluation:", error);
-    res.status(500).json({ message: "Internal Server Error", error: error.message });
+    console.error("❌ Lỗi ở /evaluation:", error);
+    res.status(500).json({ message: "Xảy ra lỗi trên Server", error: error.message });
   }
 });
-router.get("/search", async function (req, res) {
+router.get("/search",verifyToken, async function (req, res) {
   try {
     let { search = "", page = 1, limit = 10 } = req.query;
     
@@ -118,7 +129,7 @@ router.get("/search", async function (req, res) {
     var totalCount = await courseDetailService.countCourseDetail(search);
         
     res.json({
-      message: "Course detail fetched successfully",
+      message: "Lấy chi tiết khóa học thành công",
       currentPage: page,
       limit: limit,
       totalItems: totalCount,
@@ -126,8 +137,8 @@ router.get("/search", async function (req, res) {
       levels: result,
     });
   } catch (error) {
-    console.error("Error searching Course detail:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("Xảy ra lỗi khi tìm kiếm chi tiết khóa học:", error);
+    res.status(500).json({ message: "Xảy ra lỗi trên Server" });
   }
 });
 module.exports = router;

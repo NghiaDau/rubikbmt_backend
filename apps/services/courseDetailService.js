@@ -69,6 +69,38 @@ class CourseDetailService {
         }
     }
 
+    async getCourseDetails() {
+        try {
+            // Lấy danh sách CourseDetail từ database
+            let courseDetails = await this.courseDetailCollection.find().toArray();
+            // Duyệt qua từng CourseDetail để lấy thông tin chi tiết
+            for (let courseDetail of courseDetails) {
+                // Lấy thông tin `course`, `student`, `teacher` từ ID
+                let [course, student, teacher] = await Promise.all([
+                    this.courseCollection.findOne({ _id: new ObjectId(courseDetail.course) }),
+                    this.userCollection.findOne({ _id: new ObjectId(courseDetail.student) }),
+                    this.userCollection.findOne({ _id: new ObjectId(courseDetail.teacher) })
+                ]);
+
+                // Lấy danh sách `session` từ danh sách ID trong `courseDetail`
+                let sessions = await this.sessionCollection.find({
+                    _id: { $in: courseDetail.session.map(id => new ObjectId(id)) }
+                }).toArray();
+
+                courseDetail.course = course || null;
+                courseDetail.student = student || null;
+                courseDetail.teacher = teacher || null;
+                courseDetail.session = sessions || [];
+
+            }
+            // Trả về danh sách CourseDetail đã ghép nối
+            return courseDetails;
+        } catch (error) {
+            console.error("Lỗi khi lấy CourseDetail:", error);
+            throw new Error("Không thể lấy danh sách CourseDetail");
+        }
+    }
+
     async getCourseDetailById(id) {
         try {
             // Lấy CourseDetail theo ID
