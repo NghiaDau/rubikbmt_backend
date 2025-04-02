@@ -20,12 +20,19 @@ router.post("/add", verifyToken, validateCourseDetail, async function (req, res)
     var result = await courseDetailService.addCourseDetail(courseDetail, sessions);
 
     res.status(201).json({
+      status: true,
       message: "Thêm chi tiết khóa học thành công",
-      courseDetail: result,
+      data: [
+        { courseDetail: result },
+      ],
     });
   } catch (error) {
     console.error("Lỗi ở /add:", error);
-    res.status(500).json({ message: "Xảy ra lỗi trên Server", error: error.message });
+    res.status(500).json({
+      status: false,
+      message: "Xảy ra lỗi trên Server",
+      error: error.message
+    });
   }
 });
 
@@ -35,15 +42,23 @@ router.get("/get-list", verifyToken, async function (req, res) {
     var courseDetailService = new CourseDetailService();
     var result = await courseDetailService.getCourseDetails();
     if (!result) {
-      return res.status(404).json({ message: "Không tìm thấy chi tiết khóa học" });
+      return res.status(404).json({
+        status: false,
+        message: "Không tìm thấy chi tiết khóa học"
+      });
     }
     res.status(200).json({
+      status: true,
       message: "Lấy danh sách chi tiết khóa học thành công",
-      courseDetails: result,
+      data: [{ courseDetails: result }],
     });
   } catch (error) {
     console.error("Lỗi ở /get-list:", error);
-    res.status(500).json({ message: "Xảy ra lỗi trên Server", error: error.message });
+    res.status(500).json({
+      status: false,
+      message: "Xảy ra lỗi trên Server",
+      error: error.message
+    });
   }
 });
 
@@ -56,17 +71,23 @@ router.get("/get", verifyToken, validateObjectId, async function (req, res) {
 
     if (!result) {
       return res.status(404).json({
+        status: false,
         message: "Course Detail not found",
       });
     }
 
     res.status(200).json({
+      status: true,
       message: "Lấy chi tiết khóa học thành công",
-      courseDetail: result,
+      data: [{ courseDetail: result }],
     });
   } catch (error) {
     console.error("Lỗi ở /get-course-detail:", error);
-    res.status(500).json({ message: "Xảy ra lỗi trên Server", error: error.message });
+    res.status(500).json({
+      status: false,
+      message: "Xảy ra lỗi trên Server",
+      error: error.message
+    });
   }
 });
 
@@ -84,12 +105,19 @@ router.put("/update", verifyToken, validateObjectId, async function (req, res) {
     var result = await courseDetailService.updateCourseDetail(courseDetail);
 
     res.status(200).json({
+      status: true,
       message: "Cập nhật chi tiết khóa học thành công",
-      courseDetail: result,
+      data: [
+        { courseDetail: result },
+      ],
     });
   } catch (error) {
     console.error("Lỗi ở /update:", error);
-    res.status(500).json({ message: "Xảy ra lỗi trên Server", error: error.message });
+    res.status(500).json({
+      status: false,
+      message: "Xảy ra lỗi trên Server",
+      error: error.message
+    });
   }
 });
 
@@ -100,19 +128,29 @@ router.post("/evaluation", verifyToken, validateObjectId, async function (req, r
     var { evaluations } = req.body;
 
     if (!Array.isArray(evaluations)) {
-      return res.status(400).json({ message: "Dữ liệu đánh giá không hợp lệ" });
+      return res.status(400).json({
+        status: false,
+        message: "Dữ liệu đánh giá không hợp lệ"
+      });
     }
 
     var courseDetailService = new CourseDetailService();
     var result = await courseDetailService.evaluateCourseDetail(id, evaluations);
 
     res.status(200).json({
+      status: true,
       message: "Đánh giá kỹ năng thành công",
-      courseDetail: result,
+      data: [
+        { courseDetail: result },
+      ],
     });
   } catch (error) {
     console.error("Lỗi ở /evaluation:", error);
-    res.status(500).json({ message: "Xảy ra lỗi trên Server", error: error.message });
+    res.status(500).json({
+      status: false,
+      message: "Xảy ra lỗi trên Server",
+      error: error.message
+    });
   }
 });
 router.get("/search", verifyToken, async function (req, res) {
@@ -129,16 +167,21 @@ router.get("/search", verifyToken, async function (req, res) {
     var totalCount = await courseDetailService.countCourseDetail(search);
 
     res.json({
+      status: true,
       message: "Lấy chi tiết khóa học thành công",
-      currentPage: page,
-      limit: limit,
-      totalItems: totalCount,
-      totalPages: Math.ceil(totalCount / limit),
-      levels: result,
+      data: [
+        { currentPage: page },
+        { limit: limit },
+        { totalItems: totalCount },
+        { totalPages: Math.ceil(totalCount / limit) },
+        { levels: result }
+      ],
     });
   } catch (error) {
     console.error("Xảy ra lỗi khi tìm kiếm chi tiết khóa học:", error);
-    res.status(500).json({ message: "Xảy ra lỗi trên Server" });
+    res.status(500).json({ 
+      status:false,
+      message: "Xảy ra lỗi trên Server" });
   }
 });
 module.exports = router;

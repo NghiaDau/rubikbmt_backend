@@ -17,12 +17,16 @@ router.post("/add", verifyToken, async function (req, res) {
     var result = await cubeSubjectService.addCubeSubject(cubeSubject);
 
     res.status(201).json({
+      status: true,
       message: "Thêm khối Rubik thành công",
-      cubeSubject: result,
+      data: [{ cubeSubject: result }],
     });
   } catch (error) {
     console.error("Lỗi khi thêm:", error);
-    res.status(500).json({ message: "Xảy ra lỗi trên Server" });
+    res.status(500).json({
+      status: false,
+      message: "Xảy ra lỗi trên Server"
+    });
   }
 });
 
@@ -32,11 +36,15 @@ router.get("/get-list", verifyToken, async function (req, res) {
     var result = await cubeSubjectService.getCubeSubjects();
 
     res.status(200).json({
+      status: true,
       message: "Lấy danh sách khối Rubik thành công",
-      cubeSubjects: result,
+      data: [{ cubeSubjects: result }],
     });
   } catch (error) {
-    res.status(500).json({ message: "Xảy ra lỗi trên Server" });
+    res.status(500).json({
+      status: false,
+      message: "Xảy ra lỗi trên Server"
+    });
   }
 });
 
@@ -46,15 +54,22 @@ router.get("/get", verifyToken, validateObjectId, async function (req, res) {
     var result = await cubeSubjectService.getCubeSubjectById(req.query.id);
 
     if (!result) {
-      return res.status(404).json({ message: "Không tìm thấy khối Rubik" });
+      return res.status(404).json({
+        status: false,
+        message: "Không tìm thấy khối Rubik"
+      });
     }
 
     res.status(200).json({
+      status: true,
       message: "Lấy thông tin khối Rubik thành công",
-      cubeSubject: result,
+      data: [{ cubeSubject: result }],
     });
   } catch (error) {
-    res.status(500).json({ message: "Xảy ra lỗi trên Server" });
+    res.status(500).json({
+      status: false,
+      message: "Xảy ra lỗi trên Server"
+    });
   }
 });
 
@@ -72,11 +87,15 @@ router.put("/update", verifyToken, validateObjectId, async function (req, res) {
     var result = await cubeSubjectService.updateCubeSubject(cubeSubject);
 
     res.status(200).json({
+      status: true,
       message: "Cập nhật khối Rubik thành công",
-      cubeSubject: result,
+      data: [{ cubeSubject: result }],
     });
   } catch (error) {
-    res.status(500).json({ message: "Xảy ra lỗi trên Server" });
+    res.status(500).json({
+      status: false,
+      message: "Xảy ra lỗi trên Server"
+    });
   }
 });
 
@@ -94,16 +113,20 @@ router.get("/search", verifyToken, async function (req, res) {
     var totalCount = await cubeSubjectService.countCubeSubject(search);
 
     res.status(200).json({
+      status: true,
       message: "Tìm kiếm khối Rubik thành công",
-      currentPage: page,
-      limit: limit,
-      totalItems: totalCount,
-      totalPages: Math.ceil(totalCount / limit),
-      cubeSubjects: result,
+      data: [{ currentPage: page },
+      { limit: limit },
+      { totalItems: totalCount },
+      { totalPages: Math.ceil(totalCount / limit) },
+      { cubeSubjects: result }],
     });
   } catch (error) {
     console.error("Error searching CubeSubject:", error);
-    res.status(500).json({ message: "Xảy ra lỗi trên Server" });
+    res.status(500).json({
+      status: false,
+      message: "Xảy ra lỗi trên Server"
+    });
   }
 });
 
