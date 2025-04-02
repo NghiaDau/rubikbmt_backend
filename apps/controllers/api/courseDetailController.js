@@ -22,9 +22,9 @@ router.post("/add", verifyToken, validateCourseDetail, async function (req, res)
     res.status(201).json({
       status: true,
       message: "Thêm chi tiết khóa học thành công",
-      data: [
+      data:
         { courseDetail: result },
-      ],
+
     });
   } catch (error) {
     console.error("Lỗi ở /add:", error);
@@ -50,7 +50,7 @@ router.get("/get-list", verifyToken, async function (req, res) {
     res.status(200).json({
       status: true,
       message: "Lấy danh sách chi tiết khóa học thành công",
-      data: [{ courseDetails: result }],
+      data: { courseDetails: result },
     });
   } catch (error) {
     console.error("Lỗi ở /get-list:", error);
@@ -79,7 +79,7 @@ router.get("/get", verifyToken, validateObjectId, async function (req, res) {
     res.status(200).json({
       status: true,
       message: "Lấy chi tiết khóa học thành công",
-      data: [{ courseDetail: result }],
+      data: { courseDetail: result },
     });
   } catch (error) {
     console.error("Lỗi ở /get-course-detail:", error);
@@ -107,9 +107,8 @@ router.put("/update", verifyToken, validateObjectId, async function (req, res) {
     res.status(200).json({
       status: true,
       message: "Cập nhật chi tiết khóa học thành công",
-      data: [
+      data:
         { courseDetail: result },
-      ],
     });
   } catch (error) {
     console.error("Lỗi ở /update:", error);
@@ -140,9 +139,9 @@ router.post("/evaluation", verifyToken, validateObjectId, async function (req, r
     res.status(200).json({
       status: true,
       message: "Đánh giá kỹ năng thành công",
-      data: [
+      data:
         { courseDetail: result },
-      ],
+
     });
   } catch (error) {
     console.error("Lỗi ở /evaluation:", error);
@@ -169,19 +168,21 @@ router.get("/search", verifyToken, async function (req, res) {
     res.json({
       status: true,
       message: "Lấy chi tiết khóa học thành công",
-      data: [
-        { currentPage: page },
-        { limit: limit },
-        { totalItems: totalCount },
-        { totalPages: Math.ceil(totalCount / limit) },
-        { levels: result }
-      ],
+      data:
+      {
+        currentPage: page,
+        limit: limit,
+        totalItems: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        levels: result
+      }
     });
   } catch (error) {
     console.error("Xảy ra lỗi khi tìm kiếm chi tiết khóa học:", error);
-    res.status(500).json({ 
-      status:false,
-      message: "Xảy ra lỗi trên Server" });
+    res.status(500).json({
+      status: false,
+      message: "Xảy ra lỗi trên Server"
+    });
   }
 });
 module.exports = router;

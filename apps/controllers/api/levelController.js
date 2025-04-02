@@ -17,7 +17,7 @@ router.post("/add", verifyToken, async function (req, res) {
     res.status(201).json({
       status: true,
       message: "Thêm Level thành công",
-      data: [{ level: result }],
+      data: { level: result },
     });
   } catch (error) {
     res.status(500).json({
@@ -35,7 +35,7 @@ router.get("/get-list", verifyToken, async function (req, res) {
     res.status(200).json({
       status: true,
       message: "Lấy danh sách level thành công",
-      data: [{ levels: result }],
+      data:{ levels: result },
     });
   } catch (error) {
     console.error("Lỗi lấy danh sách level:", error);
@@ -61,7 +61,7 @@ router.get("/get", verifyToken, validateObjectId, async function (req, res) {
     res.status(200).json({
       status: true,
       message: "Lấy thông tin Level thành công",
-      data: [{ level: result }],
+      data: { level: result },
     });
   } catch (error) {
     console.error("Lỗi lấy level:", error);

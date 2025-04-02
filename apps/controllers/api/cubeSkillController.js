@@ -16,7 +16,7 @@ router.post("/add", verifyToken, async function (req, res) {
         res.status(201).json({
             status: true,
             message: "Kỹ năng xoay khối Rubik được thêm thành công",
-            data: [{ cubeSkill: result }],
+            data: { cubeSkill: result },
         });
     } catch (error) {
         console.error("Lỗi ở /add:", error);
@@ -36,7 +36,7 @@ router.get("/get-list", verifyToken, async function (req, res) {
         res.json({
             status: true,
             message: "Lấy danh sách kỹ năng xoay khối Rubik thành công",
-            data: [{ cubeSkills: result }],
+            data: { cubeSkills: result },
         });
     } catch (error) {
         console.error("Lỗi ở /get-list:", error);
@@ -64,7 +64,7 @@ router.get("/get", verifyToken, validateObjectId, async function (req, res) {
         res.json({
             status: true,
             message: "Lấy kỹ năng xoay khối Rubik thành công",
-            data: [{ cubeSkill: result }],
+            data: { cubeSkill: result },
         });
     } catch (error) {
         console.error("Lỗi ở /get-cubeskill:", error);
@@ -88,7 +88,7 @@ router.put("/update", verifyToken, async function (req, res) {
         res.status(200).json({
             status: true,
             message: "Cập nhật kỹ năng xoay khối Rubik thành công",
-            data: [{ cubeSkill: result }],
+            data: { cubeSkill: result },
         });
     } catch (error) {
         console.error("Lỗi ở /update:", error);
@@ -109,7 +109,7 @@ router.delete("/delete", verifyToken, validateObjectId, async function (req, res
         res.status(200).json({
             status: true,
             message: "Xóa kỹ năng xoay khối Rubik thành công",
-            data: [{ cubeSkill: result }],
+            data: { cubeSkill: result },
         });
     } catch (error) {
         console.error("Lỗi ở /delete:", error);
