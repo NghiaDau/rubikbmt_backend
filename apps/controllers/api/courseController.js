@@ -27,9 +27,8 @@ router.post("/add", verifyToken, validateCourse, async function (req, res) {
     res.status(201).json({
       status: true,
       message: "Khóa học được thêm thành công",
-      data: [
+      data:
         { course: result },
-      ]
 
     });
   } catch (error) {
@@ -47,7 +46,7 @@ router.get("/get-list", verifyToken, async function (req, res) {
     res.status(200).json({
       status: true,
       message: "Lấy danh sách khóa học thành công",
-      data: [{ courses: result }],
+      data: { courses: result },
     });
   } catch (error) {
     console.error("Lỗi ở /get-list:", error);
@@ -73,7 +72,7 @@ router.get("/get", verifyToken, validateObjectId, async function (req, res) {
     res.status(200).json({
       status: true,
       message: "Lấy khoá học thành công",
-      data: [{ course: result }],
+      data: { course: result },
     });
   } catch (error) {
     console.error("Lỗi ở /get-course:", error);
@@ -96,15 +95,15 @@ router.get("/search", verifyToken, async function (req, res) {
     res.json({
       status: true,
       message: "Lấy danh sách khóa học thành công",
-      data: [{ courses: result },
-      { currentPage: page },
-      { limit: limit, }
-      ],
-
+      data: {
+        courses: result,
+        currentPage: page,
+        limit: limit,
+      },
     });
   } catch (error) {
     console.error("Lỗi khi tìm khóa học:", error);
-    res.status(500).json({ status:false, message: "Xảy ra lỗi trên Server" });
+    res.status(500).json({ status: false, message: "Xảy ra lỗi trên Server" });
   }
 });
 module.exports = router;

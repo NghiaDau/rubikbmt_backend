@@ -115,11 +115,12 @@ router.get("/search", verifyToken, async function (req, res) {
     res.status(200).json({
       status: true,
       message: "Tìm kiếm khối Rubik thành công",
-      data: [{ currentPage: page },
-      { limit: limit },
-      { totalItems: totalCount },
-      { totalPages: Math.ceil(totalCount / limit) },
-      { cubeSubjects: result }],
+      data: { currentPage: page,
+        limit: limit,
+        totalItems: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        cubeSubjects: result
+       },
     });
   } catch (error) {
     console.error("Error searching CubeSubject:", error);
