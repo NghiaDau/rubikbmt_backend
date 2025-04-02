@@ -18,7 +18,7 @@ router.post("/add",verifyToken, async function (req, res) {
           cubeSkill: result,
       });
   } catch (error) {
-      console.error("❌ Lỗi ở /add:", error);
+      console.error("Lỗi ở /add:", error);
       res.status(500).json({ message: "Xảy ra lỗi trên Server", error: error.message });
   }
 });
@@ -34,7 +34,7 @@ router.get("/get-list",verifyToken, async function (req, res) {
           cubeSkills: result,
       });
   } catch (error) {
-      console.error("❌ Lỗi ở /get-list:", error);
+      console.error("Lỗi ở /get-list:", error);
       res.status(500).json({ message: "Xảy ra lỗi trên Server", error: error.message });
   }
 });
@@ -56,7 +56,7 @@ router.get("/get",verifyToken, validateObjectId, async function (req, res) {
           cubeSkill: result,
       });
   } catch (error) {
-      console.error("❌ Lỗi ở /get-cubeskill:", error);
+      console.error("Lỗi ở /get-cubeskill:", error);
       res.status(500).json({ message: "Xảy ra lỗi trên Server", error: error.message });
   }
 });
@@ -75,7 +75,7 @@ router.put("/update",verifyToken, async function (req, res) {
           cubeSkill: result,
       });
   } catch (error) {
-      console.error("❌ Lỗi ở /update:", error);
+      console.error("Lỗi ở /update:", error);
       res.status(500).json({ message: "Xảy ra lỗi trên Server", error: error.message });
   }
 });
@@ -91,7 +91,7 @@ router.delete("/delete",verifyToken, validateObjectId, async function (req, res)
           cubeSkill: result,
       });
   } catch (error) {
-      console.error("❌ Lỗi ở /delete:", error);
+      console.error("Lỗi ở /delete:", error);
       res.status(500).json({ message: "Xảy ra lỗi trên Server", error: error.message });
   }
 });

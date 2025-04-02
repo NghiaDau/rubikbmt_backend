@@ -5,7 +5,7 @@ var CourseService = require("./../../services/courseService");
 var validateCourse = require("./../../utils/validateCourse");
 var validateObjectId = require("./../../utils/validateObjectId");
 var verifyToken = require("./../../utils/verifyToken");
-// 🟢 API: Thêm Course
+//  API: Thêm Course
 router.post("/add", verifyToken,validateCourse, async function (req, res) {
   try {
       var {
@@ -29,12 +29,12 @@ router.post("/add", verifyToken,validateCourse, async function (req, res) {
           course: result,
       });
   } catch (error) {
-      console.error("❌ Lỗi ở /add:", error);
+      console.error("Lỗi ở /add:", error);
       res.status(500).json({ message: "Xảy ra lỗi trên Server", error: error.message });
   }
 });
 
-// 🟢 API: Lấy danh sách Courses
+//  API: Lấy danh sách Courses
 router.get("/get-list", verifyToken,async function (req, res) {
   try {
       var courseService = new CourseService();
@@ -45,12 +45,12 @@ router.get("/get-list", verifyToken,async function (req, res) {
           courses: result,
       });
   } catch (error) {
-      console.error("❌ Lỗi ở /get-list:", error);
+      console.error("Lỗi ở /get-list:", error);
       res.status(500).json({ message: "Xảy ra lỗi trên Server", error: error.message });
   }
 });
 
-// 🟢 API: Lấy thông tin chi tiết Course theo ID
+//  API: Lấy thông tin chi tiết Course theo ID
 router.get("/get", verifyToken,validateObjectId, async function (req, res) {
   try {
       var courseService = new CourseService();
@@ -69,7 +69,7 @@ router.get("/get", verifyToken,validateObjectId, async function (req, res) {
           course: result,
       });
   } catch (error) {
-      console.error("❌ Lỗi ở /get-course:", error);
+      console.error("Lỗi ở /get-course:", error);
       res.status(500).json({ message: "Xảy ra lỗi trên Server", error: error.message });
   }
 });

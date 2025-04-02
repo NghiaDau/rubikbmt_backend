@@ -16,7 +16,7 @@ router.post("/add", verifyToken, async function (req, res) {
     var cubeSubjectService = new CubeSubjectService();
     var result = await cubeSubjectService.addCubeSubject(cubeSubject);
 
-    res.json({
+    res.status(201).json({
       message: "Thêm khối Rubik thành công",
       cubeSubject: result,
     });
@@ -31,7 +31,7 @@ router.get("/get-list", verifyToken, async function (req, res) {
     var cubeSubjectService = new CubeSubjectService();
     var result = await cubeSubjectService.getCubeSubjects();
 
-    res.json({
+    res.status(200).json({
       message: "Lấy danh sách khối Rubik thành công",
       cubeSubjects: result,
     });
@@ -49,7 +49,7 @@ router.get("/get", verifyToken, validateObjectId, async function (req, res) {
       return res.status(404).json({ message: "Không tìm thấy khối Rubik" });
     }
 
-    res.json({
+    res.status(200).json({
       message: "Lấy thông tin khối Rubik thành công",
       cubeSubject: result,
     });
@@ -71,7 +71,7 @@ router.put("/update", verifyToken, validateObjectId, async function (req, res) {
     var cubeSubjectService = new CubeSubjectService();
     var result = await cubeSubjectService.updateCubeSubject(cubeSubject);
 
-    res.json({
+    res.status(200).json({
       message: "Cập nhật khối Rubik thành công",
       cubeSubject: result,
     });
@@ -93,7 +93,7 @@ router.get("/search", verifyToken, async function (req, res) {
     var result = await cubeSubjectService.searchCubeSubjects(search, skip, limit);
     var totalCount = await cubeSubjectService.countCubeSubject(search);
 
-    res.json({
+    res.status(200).json({
       message: "Tìm kiếm khối Rubik thành công",
       currentPage: page,
       limit: limit,
