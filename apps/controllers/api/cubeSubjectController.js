@@ -8,24 +8,53 @@ var verifyToken = require("./../../utils/verifyToken");
 
 router.post("/add", verifyToken, async function (req, res) {
   try {
-    var { name, cubeSkills } = req.body;
-    var cubeSubject = new CubeSubject();
-    cubeSubject.name = name;
-    cubeSubject.cubeSkills = cubeSkills;
+    const { name, description, cubeSkills = [] } = req.body;
 
-    var cubeSubjectService = new CubeSubjectService();
-    var result = await cubeSubjectService.addCubeSubject(cubeSubject);
+    // Kiểm tra dữ liệu đầu vào
+    if (!name || typeof name !== "string") {
+      return res.status(400).json({
+        status: false,
+        message: "Tên chủ đề không hợp lệ",
+      });
+    }
 
+    if (!description || typeof description !== "string") {
+      return res.status(400).json({
+        status: false,
+        message: "Mô tả không hợp lệ",
+      });
+    }
+
+    if (!Array.isArray(cubeSkills)) {
+      return res.status(400).json({
+        status: false,
+        message: "cubeSkills phải là một mảng",
+      });
+    }
+
+    // Tạo đối tượng để lưu vào MongoDB
+    const cubeSubject = {
+      name,
+      description,
+      cubeSkills,
+      status: -1, // Giá trị mặc định cho trạng thái
+    };
+
+    // Lưu vào MongoDB
+    const result = await db.collection("cubeSubject").insertOne(cubeSubject);
+    console.log("Saved CubeSubject:", result);
+
+    // Trả về phản hồi thành công
     res.status(201).json({
       status: true,
       message: "Thêm khối Rubik thành công",
-      data: [{ cubeSubject: result }],
+      data: result.ops[0], // Trả về đối tượng vừa lưu
     });
   } catch (error) {
-    console.error("Lỗi khi thêm:", error);
+    console.error("Error adding CubeSubject:", error); // Log lỗi chi tiết
     res.status(500).json({
       status: false,
-      message: "Xảy ra lỗi trên Server"
+      message: "Xảy ra lỗi trên Server",
     });
   }
 });
@@ -38,12 +67,15 @@ router.get("/get-list", verifyToken, async function (req, res) {
     res.status(200).json({
       status: true,
       message: "Lấy danh sách khối Rubik thành công",
-      data: [{ cubeSubjects: result }],
+      data: {
+        cubeSubjects: result, // Đảm bảo `cubeSubjects` nằm trong một object
+      },
     });
   } catch (error) {
+    console.error("Error fetching CubeSubjects:", error);
     res.status(500).json({
       status: false,
-      message: "Xảy ra lỗi trên Server"
+      message: "Xảy ra lỗi trên Server",
     });
   }
 });
