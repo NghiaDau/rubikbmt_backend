@@ -71,5 +71,9 @@ class CourseService {
     async deleteCourse(id) {
         return await this.courseCollection.deleteOne({ _id: ObjectId(id) });
     }
+    async searchCourses(search, skip, limit) {
+        const query = search ? { name: { $regex: search, $options: "i" } } : {}; // Tìm kiếm không phân biệt hoa thường
+        return await this.courseCollection.find(query).skip(skip).limit(limit);
+    }
 }
 module.exports = CourseService;

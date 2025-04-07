@@ -15,11 +15,15 @@ class CubeSubjectService {
     }
 
     async addCubeSubject(cubeSubject) {
-        result = await this.cubeSubjectCollection.insertOne(cubeSubject);
+        var objCubeSkill = cubeSubject.cubeSkills.map(id => new ObjectId(id));
+        // Chuyển danh sách cubeSkills thành ObjectId
+        cubeSubject.cubeSkills = objCubeSkill;
+        var result = await this.cubeSubjectCollection.insertOne(cubeSubject);
         // Cập nhật CubeSkill: thêm CubeSubject vào danh sách cubeSubject của CubeSkill
+
         await this.cubeSkillCollection.updateMany(
-            { _id: { $in: cubeSkills.map(id => new ObjectId(id)) } },
-            { $addToSet: { cubeSubject: new ObjectId(_id) } }
+            { _id: { $in: cubeSubject.cubeSkills.map(id => new ObjectId(id)) } },
+            { $addToSet: { cubeSubject: cubeSubject._id } }
         );
         return result;
     }
@@ -91,5 +95,28 @@ class CubeSubjectService {
     async getCubeSubjectNameById(id) {
         return await this.cubeSubjectCollection.findOne({ _id: new ObjectId(id) }).select(" name");
     }
+    async searchCubeSubjects(search, skip, limit) {
+        var query = search ? { name: { $regex: search, $options: "i" } } : {}; // Tìm kiếm không phân biệt hoa thường
+        var result = await this.cubeSubjectCollection.find(query).skip(skip).limit(limit).toArray();
+        // Duyệt từng CubeSubject để lấy danh sách cubeSkills
+        for (let cubeSubject of result) {
+            const skillIds = cubeSubject.cubeSkills.map(id => new ObjectId(id));
+
+            // Truy vấn danh sách cubeSkills theo skillIds
+            const cubeSkills = await this.cubeSkillCollection
+                .find({ _id: { $in: skillIds } })
+                .project({ name: 1 }) // Chỉ lấy field "name"
+                .toArray();
+
+            cubeSubject.cubeSkills = cubeSkills; // Gán danh sách cubeSkills vào CubeSubject
+        }
+        return result;
+
+    }
+    async countCubeSubject(search) {
+        const query = search ? { name: { $regex: search, $options: "i" } } : {};
+        return await this.cubeSubjectCollection.countDocuments(query);
+    }
+
 }
 module.exports = CubeSubjectService;

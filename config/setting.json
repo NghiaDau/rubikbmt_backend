@@ -41,8 +41,9 @@
             "add" : "course.add",
             "update":"course.update",
             "delete":"course.delete",
-            "get-course":"course.get-course",
-            "list-course":"course.list-course"
+            "get-course":"course.get",
+            "list-course":"course.get-list",
+            "search-course":"course.search"
         }
     }
 }
