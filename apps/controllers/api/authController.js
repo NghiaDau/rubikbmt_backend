@@ -369,6 +369,117 @@ router.get("/list-user", verifyToken, async (req, res) => {
   }
 });
 
+router.get("/list-teacher", verifyToken, async (req, res) => {
+  try {
+    var permision = req.userData.claims.includes("user.list-user");
+    if (!permision) {
+      return res
+        .status(403)
+        .json({ status: false, message: "Bạn không có quyền truy cập!" });
+    }
+    var { page, limit } = req.query;
+    page = parseInt(page);
+    limit = parseInt(limit);
+    var authService = new AuthService();
+    var roleService = new RoleService();
+    var userRoleService = new UserRoleService();
+
+    var totalUsers = await authService.getUserCount();
+    var totalPages = Math.ceil(totalUsers / limit);
+    var userList = await authService.getUserList(page, limit);
+
+    // Lấy roles cho từng user và lọc những user có role "teacher"
+    const teachers = await Promise.all(
+      userList.map(async (user) => {
+        const listRoleId = await userRoleService.getRoleIdsByUserId(
+          user._id.toString()
+        );
+        const roles = await Promise.all(
+          listRoleId.map((id) => roleService.getRoleById(id))
+        );
+        const roleNames = roles.map((role) => role.roleName);
+        console.log(roleNames);
+        if (roleNames.includes("teacher")) {
+          return {
+            ...user,
+            roles: roleNames,
+          };
+        }
+        return null;
+      })
+    );
+
+    const filteredTeachers = teachers.filter((teacher) => teacher !== null);
+
+    return res.status(200).json({
+      status: true,
+      message: "Lấy danh sách giáo viên thành công!",
+      data: filteredTeachers,
+      totalUsers: filteredTeachers.length,
+      totalPages: totalPages,
+      currentPage: page,
+      limit: limit,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+router.get("/list-student", verifyToken, async (req, res) => {
+  try {
+    var permision = req.userData.claims.includes("user.list-user");
+    if (!permision) {
+      return res
+        .status(403)
+        .json({ status: false, message: "Bạn không có quyền truy cập!" });
+    }
+    var { page, limit } = req.query;
+    page = parseInt(page);
+    limit = parseInt(limit);
+    var authService = new AuthService();
+    var roleService = new RoleService();
+    var userRoleService = new UserRoleService();
+
+    var totalUsers = await authService.getUserCount();
+    var totalPages = Math.ceil(totalUsers / limit);
+    var userList = await authService.getUserList(page, limit);
+
+    // Lấy roles cho từng user và lọc những user có role "teacher"
+    const teachers = await Promise.all(
+      userList.map(async (user) => {
+        const listRoleId = await userRoleService.getRoleIdsByUserId(
+          user._id.toString()
+        );
+        const roles = await Promise.all(
+          listRoleId.map((id) => roleService.getRoleById(id))
+        );
+        const roleNames = roles.map((role) => role.roleName);
+        if (roleNames.includes("student")) {
+          return {
+            ...user,
+            roles: roleNames,
+          };
+        }
+        return null;
+      })
+    );
+
+    const filteredTeachers = teachers.filter((teacher) => teacher !== null);
+
+    return res.status(200).json({
+      status: true,
+      message: "Lấy danh sách giáo viên thành công!",
+      data: filteredTeachers,
+      totalUsers: filteredTeachers.length,
+      totalPages: totalPages,
+      currentPage: page,
+      limit: limit,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+});
+
 router.post(
   "/update-profile",
   upload.single("avatar"),

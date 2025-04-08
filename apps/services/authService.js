@@ -31,6 +31,10 @@ class AuthService {
     });
   }
 
+  async getUserCount() {
+    return await this.userCollection.countDocuments();
+  }
+
   async insertUser(user) {
     return await this.userCollection.insertOne(user);
   }

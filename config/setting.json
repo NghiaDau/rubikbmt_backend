@@ -7,6 +7,7 @@
     "jwt":{
         "access_secret": "2324fb04737d4ad20303bf4e664e65c490f0c32383e329d4ba2ec9c2554bd4f0",
         "refresh_secret": "2324fb04737d4ad20303bf4e664e65c490f0c32383e329d4ba2ec9c2554bd4f0"
+  
     },
     "claims":{
         "user":{
