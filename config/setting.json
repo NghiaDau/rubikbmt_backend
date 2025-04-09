@@ -40,6 +40,16 @@
             "get-course":"course.get",
             "list-course":"course.get-list",
             "search-course":"course.search"
+        },
+        "coursedetail":{
+            "add" : "coursedetail.add",
+            "update":"coursedetail.update",
+            "delete":"coursedetail.delete",
+            "get":"coursedetail.get",
+            "get-list":"coursedetail.get-list",
+            "search-coursedetail":"coursedetail.search",
+            "evaluation":"coursedetail.evaluation"
         }
+
     }
 }

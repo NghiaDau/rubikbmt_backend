@@ -9,7 +9,13 @@ var validateObjectId = require("./../../utils/validateObjectId");
 
 // API: Thêm CourseDetail
 router.post("/add", verifyToken, validateCourseDetail, async function (req, res) {
-  try {
+  try { 
+    var permision = req.userData.claims.includes("user-courdetail.add");
+    if (!permision) {
+      return res
+        .status(403)
+        .json({ status: false, message: "You do not have permision." });
+    }
     var { actualFee, Paid, numberOfStudied, course, student, teacher, sessions } = req.body;
 
     var courseDetail = {
@@ -39,6 +45,12 @@ router.post("/add", verifyToken, validateCourseDetail, async function (req, res)
 // API: Lấy danh sách CourseDetail
 router.get("/get-list", verifyToken, async function (req, res) {
   try {
+    var permision = req.userData.claims.includes("user-courdetail.get-list");
+    if (!permision) {
+      return res
+        .status(403)
+        .json({ status: false, message: "You do not have permision." });
+    }
     var courseDetailService = new CourseDetailService();
     var result = await courseDetailService.getCourseDetails();
     if (!result) {
@@ -65,6 +77,12 @@ router.get("/get-list", verifyToken, async function (req, res) {
 // API: Lấy thông tin chi tiết CourseDetail theo ID
 router.get("/get", verifyToken, validateObjectId, async function (req, res) {
   try {
+    var permision = req.userData.claims.includes("user-courdetail.get");
+    if (!permision) {
+      return res
+        .status(403)
+        .json({ status: false, message: "You do not have permision." });
+    }
     var { id } = req.query;
     var courseDetailService = new CourseDetailService();
     var result = await courseDetailService.getCourseDetailById(id);
@@ -94,6 +112,12 @@ router.get("/get", verifyToken, validateObjectId, async function (req, res) {
 //  API: Cập nhật CourseDetail
 router.put("/update", verifyToken, validateObjectId, async function (req, res) {
   try {
+    var permision = req.userData.claims.includes("user-courdetail.update");
+    if (!permision) {
+      return res
+        .status(403)
+        .json({ status: false, message: "You do not have permision." });
+    }
     var { _id } = req.query;
     var { actualFee, Paid, numberOfStudied, course, student, teacher, evaluation, session } = req.body;
 
@@ -123,6 +147,12 @@ router.put("/update", verifyToken, validateObjectId, async function (req, res) {
 //  API: Đánh giá CourseDetail
 router.post("/evaluation", verifyToken, validateObjectId, async function (req, res) {
   try {
+    var permision = req.userData.claims.includes("user-courdetail.evaluation");
+    if (!permision) {
+      return res
+        .status(403)
+        .json({ status: false, message: "You do not have permision." });
+    }
     var { id } = req.query;
     var { evaluations } = req.body;
 
@@ -154,6 +184,12 @@ router.post("/evaluation", verifyToken, validateObjectId, async function (req, r
 });
 router.get("/search", verifyToken, async function (req, res) {
   try {
+    var permision = req.userData.claims.includes("user-courdetail.search");
+    if (!permision) {
+      return res
+        .status(403)
+        .json({ status: false, message: "You do not have permision." });
+    }
     let { search = "", page = 1, limit = 10 } = req.query;
 
     // Chuyển đổi kiểu dữ liệu
