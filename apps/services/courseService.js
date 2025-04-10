@@ -20,7 +20,7 @@ class CourseService {
 
     async addCourse(course) {
 
-        // 1️⃣ Chạy song song 2 truy vấn lấy Level và CubeSubject
+        // Chạy song song 2 truy vấn lấy Level và CubeSubject
         const [level, cubeSubject] = await Promise.all([
             this.levelCollection.findOne({ _id: new ObjectId(course.level) }),
             this.cubeSubjectCollection.findOne({ _id: new ObjectId(course.cubeSubject) })
@@ -29,19 +29,19 @@ class CourseService {
         if (!level) throw new Error("Level không tồn tại");
         if (!cubeSubject) throw new Error("CubeSubject không tồn tại");
 
-        // 2️⃣ Gán trực tiếp Level vào course
+        // Gán trực tiếp Level vào course
         course.level = {
             _id: level._id,
             name: level.name
         };
 
-        // 3️⃣ Lấy danh sách CubeSkill (nếu có)
+        // Lấy danh sách CubeSkill (nếu có)
         const cubeSkillIds = (cubeSubject.cubeSkills || []).map(id => new ObjectId(id));
         const cubeSkills = cubeSkillIds.length > 0
             ? await this.cubeSkillCollection.find({ _id: { $in: cubeSkillIds } }).toArray()
             : [];
 
-        // 4️⃣ Gán CubeSkills với progress = 0
+        // Gán CubeSkills với progress = 0
         const cubeSkillsObject = cubeSkills.map(skill => ({
             _id: skill._id,
             name: skill.name

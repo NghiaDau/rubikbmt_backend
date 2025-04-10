@@ -4,12 +4,14 @@ class SessionService {
     databseConnection = require("./../database/database");
     session = require("./../entities/session");
     client;
-    courseDatabase;
+    sessionDatabase;
     sessionCollection;
+    courseDetailCollection;
     constructor() {
         this.client = this.databseConnection.getMongoClient();
-        this.courseDatabase = this.client.db(config.mongodb.database);
+        this.sessionDatabase = this.client.db(config.mongodb.database);
         this.sessionCollection = this.courseDatabase.collection("session");
+        this.courseDetailCollection = this.sessionDatabase.collection("courseDetail");
     }
     async addSession(session) {
         return await this.sessionCollection.insertOne(session);
