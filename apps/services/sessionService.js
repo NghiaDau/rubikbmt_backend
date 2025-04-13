@@ -32,12 +32,16 @@ class SessionService {
     var result = await this.sessionCollection
       .find({ idCourseDetail: new ObjectId(id) })
       .toArray();
-    //duyet qua tung session de lay ten courseDetail
+    // Iterate through each session to fetch courseDetail name
     for (let i = 0; i < result.length; i++) {
-      const courseDetail = await this.courseDetailCollection.findOne({
-        _id: new ObjectId(result[i].idCourseDetail),
-      });
-      result[i].courseDetail = courseDetail;
+      if (ObjectId.isValid(result[i].idCourseDetail)) {
+        const courseDetail = await this.courseDetailCollection.findOne({
+          _id: new ObjectId(result[i].idCourseDetail),
+        });
+        result[i].courseDetail = courseDetail;
+      } else {
+        result[i].courseDetail = null; // Handle invalid idCourseDetail
+      }
     }
 
     return result;
