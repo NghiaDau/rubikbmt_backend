@@ -33,20 +33,18 @@ verifyToken = (req, res, next) => {
   if (!token) {
     return res.status(401).json({ status: false, message: "Unauthorized" });
   }
-
-  jsonwebtoken.verify(token, config.jwt.secret, (err, user) => {
+  jsonwebtoken.verify(token, config.jwt.access_secret, (err, user) => {
     if (err) {
       return res.status(403).json({ status: false, message: "Forbidden" });
     }
   });
   try {
-    const decode = jsonwebtoken.verify(token, config.jwt.secret);
+    const decode = jsonwebtoken.verify(token, config.jwt.access_secret);
     let details = (req.userData = {
       user: decode.user,
       roles: decode.roles,
       claims: decode.claims,
     });
-    console.log(details);
     next();
   } catch (error) {
     return res

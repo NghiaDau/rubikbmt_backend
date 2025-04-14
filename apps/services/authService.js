@@ -15,16 +15,24 @@ class AuthService {
   async getUserList(page = 1, limit = 10) {
     const skip = (page - 1) * limit;
     const cursor = await this.userCollection
-      .find({}, {})
+      .find({}, { projection: { password: 0 } })
       .skip(skip)
       .limit(limit);
     return await cursor.toArray();
+  }
+
+  async getUserCount() {
+    return await this.userCollection.countDocuments();
   }
 
   async getUserById(userId) {
     return await this.userCollection.findOne({
       _id: new ObjectId(userId),
     });
+  }
+
+  async getUserCount() {
+    return await this.userCollection.countDocuments();
   }
 
   async insertUser(user) {
